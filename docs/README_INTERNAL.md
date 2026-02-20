@@ -1,77 +1,94 @@
+
 # PizzaMama Market – Documentazione Tecnica Interna
+
+---
 
 ## Scopo di questo documento
 
-Questo documento fornisce una **guida tecnica interna** al progetto **PizzaMama Market**.
+Questo documento fornisce una **guida tecnica interna** al progetto PizzaMama Market.
 
 Non è destinato alla presentazione pubblica del repository, ma è pensato per:
 
 * sviluppatori che lavorano al progetto
-* comprendere la struttura tecnica del backend
-* mantenere coerenza architetturale nel tempo
-* guidare l’evoluzione del codice
+* mantenere coerenza architetturale
+* guidare l’evoluzione tecnica
 * facilitare onboarding e manutenzione
+* evitare deriva architetturale nel tempo
 
-Il README principale rimane orientato alla **visione di prodotto**; questo documento è orientato alla **realizzazione tecnica**.
+Il README principale rimane orientato alla **visione di prodotto**.
+Questo documento è orientato alla **realizzazione tecnica**.
 
 ---
 
-## Visione Tecnica del Progetto
+# Visione Tecnica del Progetto
 
-PizzaMama Market è progettato come una **piattaforma API-first**, con una chiara separazione tra:
+PizzaMama Market è progettato come una piattaforma **API-first**.
+
+Separazione chiara tra:
 
 * logica di business
 * livello applicativo
-* interfacce di comunicazione (API)
+* interfacce di comunicazione (REST API)
 
 L’obiettivo è costruire una base:
 
 * semplice da comprendere
-* solida dal punto di vista architetturale
+* solida architetturalmente
 * facilmente estendibile
 * sostenibile nel lungo periodo
 
 ---
 
-## Architettura Concettuale
+# Architettura Concettuale
 
-```text
-[ Client (Web / Mobile / External) ]
-|
-REST API
-|
-Django Applications
-|
-Business Domain Logic
-|
-Database
 ```
-
-### Principi Architetturali
-
-* separazione netta delle responsabilità
-* backend indipendente dal frontend
-* domini di business modulari
-* API riutilizzabili
-* codice orientato all’evoluzione
+[ Client (Web / Mobile / External Services) ]
+              |
+           REST API
+              |
+        Django Applications
+              |
+        Domain Business Logic
+              |
+            Database
+```
 
 ---
 
-## Struttura Backend
+# Principi Architetturali
 
-```text
+* separazione netta delle responsabilità
+* backend indipendente dal frontend
+* domini modulari e isolati
+* API riutilizzabili
+* evoluzione incrementale
+* evitare over-engineering prematuro
+
+---
+
+# Struttura Backend
+
+Struttura prevista:
+
+```
 backend/
 ├── manage.py
-├── pizzamama/              # Configurazione progetto Django
-│   ├── settings.py
-│   ├── urls.py
+├── config/                   # Configurazione progetto Django
+│   ├── __init__.py
 │   ├── asgi.py
-│   └── wsgi.py
+│   ├── wsgi.py
+│   ├── urls.py
+│   └── settings/
+│       ├── __init__.py
+│       ├── base.py
+│       ├── dev.py
+│       └── prod.py
 │
-├── apps/                   # App Django (domini applicativi)
+├── apps/                     # Domini applicativi
 │   ├── accounts/
 │   │   ├── models.py
 │   │   ├── admin.py
+│   │   ├── services.py
 │   │   ├── api/
 │   │   ├── urls.py
 │   │   └── migrations/
@@ -79,6 +96,7 @@ backend/
 │   ├── products/
 │   │   ├── models.py
 │   │   ├── admin.py
+│   │   ├── services.py
 │   │   ├── api/
 │   │   ├── urls.py
 │   │   └── migrations/
@@ -86,22 +104,63 @@ backend/
 │   └── orders/
 │       ├── models.py
 │       ├── admin.py
+│       ├── services.py
 │       ├── api/
 │       ├── urls.py
 │       └── migrations/
 │
-└── db.sqlite3
+├── tests/
+└── requirements/
 ```
+
+Nota:
+Il virtual environment non è parte dell’architettura e non viene documentato nella struttura.
 
 ---
 
-## Ruolo delle Cartelle
+# Settings Strategy
 
-### `apps/`
+Il progetto utilizza una struttura settings modulare:
 
-Contiene **tutto il codice Django applicativo**:
+* `base.py` → configurazioni comuni
+* `dev.py` → ambiente sviluppo
+* `prod.py` → ambiente produzione
 
-* modelli (`models.py`)
+Questo consente:
+
+* separazione ambienti
+* configurazioni sicure in produzione
+* integrazione semplice con Docker e CI/CD
+
+---
+
+# Custom User Model (Decisione Architetturale Fondamentale)
+
+Il progetto utilizza **un Custom User Model fin dall’inizio**, estendendo `AbstractUser`.
+
+Motivazione:
+
+* flessibilità futura
+* estensione campi utente
+* integrazione sistemi loyalty
+* evitare refactor critici in fase avanzata
+
+Tutti i riferimenti all’utente devono utilizzare:
+
+```python
+settings.AUTH_USER_MODEL
+```
+
+Mai importare direttamente `User` da `django.contrib.auth`.
+
+---
+
+# Ruolo della Cartella `apps/`
+
+Contiene tutto il codice applicativo Django:
+
+* modelli (`models.Model`)
+* logica di dominio (`services.py`)
 * admin
 * API (serializers, views, routers)
 * URL routing
@@ -109,57 +168,74 @@ Contiene **tutto il codice Django applicativo**:
 
 Regola fondamentale:
 
-> **Ogni modello Django (`models.Model`) vive esclusivamente in `apps/`.**
-
-Questa scelta garantisce:
-
-* compatibilità nativa con Django
-* migrazioni chiare
-* import semplici e coerenti
-* riduzione della complessità
+> Ogni modello Django vive esclusivamente in `apps/`.
 
 ---
 
-### Logica di Dominio
+# Logica di Dominio
 
-La logica di dominio (regole di business, calcoli, orchestrazioni) è mantenuta:
+La logica di business è mantenuta:
 
-* **all’interno delle app**
-* oppure in moduli dedicati (es. `services.py`)
+* all’interno delle app
+* oppure in moduli dedicati (`services.py`)
 
-In questa fase iniziale del progetto:
+In questa fase:
 
-* si privilegia la **chiarezza** rispetto all’astrazione
-* si evita una separazione eccessiva prematura
+* si privilegia la chiarezza
+* si evita separazione eccessiva
+* si mantiene coerenza per dominio
 
 ---
 
-## Domini di Business Implementati
+# API Design Strategy
 
-### Accounts
+Le API seguono un approccio:
+
+* RESTful
+* versionabile
+
+Struttura prevista:
+
+```
+/api/v1/accounts/
+/api/v1/products/
+/api/v1/orders/
+```
+
+Motivazione:
+
+* evoluzione futura senza breaking changes
+* supporto multi-client
+
+---
+
+# Domini di Business
+
+## Accounts
 
 * utenti personalizzati
 * profili
 * indirizzi
 * preferenze
-* sistemi di fidelizzazione
+* loyalty system
 
-### Products
+## Products
 
 * catalogo pizze
 * categorie
 * ingredienti
 * allergeni
-* pricing e varianti
+* varianti
+* pricing
 
-### Orders
+## Orders
 
 * carrello
 * gestione ordini
-* workflow di stato
+* workflow stati
 * storicizzazione
 
-Domini futuri previsti:
+Domini previsti:
 
 * Payments
 * Delivery
@@ -168,31 +244,13 @@ Domini futuri previsti:
 
 ---
 
-## Regole di Import
+# Database Strategy
 
-Import **sempre espliciti e coerenti**.
+* SQLite per sviluppo
+* PostgreSQL per produzione
+* migrazioni obbligatorie per ogni modifica ai modelli
 
-### Esempio corretto
-
-```python
-from apps.products.models import Pizza
-```
-
-### Regole
-
-* nessun import circolare
-* nessuna duplicazione dei modelli
-* modelli importati solo dalle rispettive app
-
----
-
-## Database e Migrazioni
-
-* SQLite utilizzato in sviluppo
-* PostgreSQL previsto per produzione
-* ogni modifica ai modelli richiede una migrazione
-
-Workflow standard:
+Workflow:
 
 ```bash
 python manage.py makemigrations
@@ -201,57 +259,77 @@ python manage.py migrate
 
 ---
 
-## Sicurezza
+# Regole di Import
+
+Esempio corretto:
+
+```python
+from apps.products.models import Pizza
+```
+
+Regole:
+
+* nessun import circolare
+* nessuna duplicazione modelli
+* import sempre espliciti
+* modelli referenziati tramite `settings.AUTH_USER_MODEL`
+
+---
+
+# Sicurezza
 
 Il progetto è predisposto per:
 
-* autenticazione e autorizzazioni robuste
-* validazione degli input
-* protezione CSRF e CORS
-* logging applicativo
-* audit e best practice di sicurezza
+* autenticazione robusta
+* sistema permessi DRF
+* validazione input
+* CSRF e CORS
+* logging strutturato
+* configurazione differenziata per ambiente
 
 ---
 
-## Testing
+# Testing Strategy
 
 Struttura pronta per:
 
-* test unitari sui modelli
-* test delle API
-* test di integrazione
+* test unitari modelli
+* test servizi
+* test API
+* test integrazione
 
-L’obiettivo è mantenere:
+Obiettivo:
 
 * codice affidabile
 * regressioni controllate
-* facilità di refactoring
+* refactoring sicuro
 
 ---
 
-## Linee Guida di Sviluppo
+# Linee Guida di Sviluppo
 
 * mantenere le app piccole e leggibili
-* privilegiare la chiarezza rispetto all’over-engineering
+* evitare complessità prematura
 * refactor incrementali
-* documentare le decisioni architetturali rilevanti
+* documentare decisioni architetturali
+* privilegiare coerenza rispetto a soluzioni creative isolate
 
 ---
 
-## Obiettivo di Lungo Periodo
+# Obiettivo di Lungo Periodo
 
 PizzaMama Market è pensato come:
 
-* base professionale di backend Django
+* base professionale backend Django
 * progetto evolutivo
-* riferimento architetturale per applicazioni reali
+* riferimento architetturale reale
 * piattaforma pronta per integrazioni future
 
 ---
 
-## Nota Finale
+# Nota Finale
 
-Questo documento è **ad uso interno**.
+Questo documento è ad uso interno.
 
 Serve a garantire che il progetto rimanga:
 
@@ -259,6 +337,5 @@ Serve a garantire che il progetto rimanga:
 * leggibile
 * sostenibile
 * professionale
-
-Il README principale resta orientato alla **presentazione del progetto**, non ai dettagli implementativi.
+* scalabile
 

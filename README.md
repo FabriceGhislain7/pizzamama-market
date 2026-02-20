@@ -78,6 +78,7 @@ pizzamama-market/
 │   ├── pizzamama/            # Configurazione progetto
 │   ├── apps/                 # App Django (accounts, products, orders, ...)
 │   ├── manage.py
+|   ├── venv/
 │   └── db.sqlite3
 │
 ├── frontend/                 # Frontend React (in sviluppo)
@@ -88,7 +89,6 @@ pizzamama-market/
 ├── docs/                     # Documentazione tecnica
 │
 ├── docker-compose.yml
-├── .env.example
 └── README.md
 ````
 
