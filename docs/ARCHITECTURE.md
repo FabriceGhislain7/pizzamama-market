@@ -1,74 +1,112 @@
-# PizzaMama Market – Architecture Reference
+# 🍕 PizzaMama Market – Architecture Reference (Versione Allineata)
 
 ---
 
-## Scopo del Documento
+# Scopo del Documento
 
-Questo documento descrive l’**architettura ufficiale** del progetto PizzaMama Market.
+Questo documento definisce l’**architettura ufficiale e vincolante** del progetto PizzaMama Market.
 
-È il riferimento tecnico principale per:
+Serve per:
 
-* comprendere la struttura del sistema
-* prendere decisioni coerenti nel tempo
-* mantenere qualità architetturale
-* supportare onboarding e crescita
-* prevenire debito tecnico e derive strutturali
+* mantenere coerenza nel tempo
+* prevenire derive architetturali
+* supportare crescita controllata
+* ridurre debito tecnico
+* garantire evoluzione sicura
 
-Le regole definite in questo documento **non sono opzionali**.
+Le regole qui definite **non sono opzionali**.
 
 ---
 
 # Visione Architetturale
 
-PizzaMama Market è una piattaforma e-commerce **API-first**, orientata al business e progettata per crescere in modo controllato.
+PizzaMama Market è una piattaforma e-commerce **API-first**, progettata per:
 
-Principi fondamentali:
+* scalabilità progressiva
+* separazione dominio/framework
+* riutilizzo backend (web, mobile, integrazioni)
+* sicurezza by design
+* evoluzione senza riscritture invasive
 
-* separazione netta delle responsabilità
-* domini di business modulari
-* backend riutilizzabile (web, mobile, integrazioni)
-* frontend completamente indipendente
-* evoluzione progressiva senza riscritture invasive
+Django è utilizzato come:
 
-Il backend non è un monolite MVC tradizionale.
-Django è utilizzato come **API provider e orchestratore applicativo**.
+> API provider e orchestratore applicativo
+> Non come monolite MVC tradizionale
+
+---
+
+# Principi Fondamentali
+
+1. Separazione netta delle responsabilità
+2. Dominio modulare
+3. Zero Trust Security
+4. API come unica interfaccia ufficiale
+5. Evoluzione incrementale
+6. Nessun over-engineering prematuro
+
+---
+
+# Filosofia di Sicurezza (Zero Trust)
+
+Principi applicati:
+
+* Default deny
+* Permessi espliciti
+* Nessuna fiducia implicita tra layer
+* Nessuna esposizione non necessaria
+* Configurazioni ambiente separate
+* Preparazione a JWT (JSON Web Token)
+
+Stato attuale autenticazione:
+
+* SessionAuthentication attiva
+* DEFAULT_PERMISSION_CLASSES = IsAuthenticated
+* BasicAuthentication rimossa
+* JWT previsto in evoluzione futura
+
+---
+
+# Naming Strategy Ufficiale
+
+| Elemento               | Convenzione         |
+| ---------------------- | ------------------- |
+| URL pubblico           | kebab-case italiano |
+| Variabili dominio      | snake_case italiano |
+| Classi dominio         | PascalCase italiano |
+| Framework Django/DRF   | inglese             |
+| Modello autenticazione | `User` (inglese)    |
+
+Separazione netta tra dominio e framework.
 
 ---
 
 # Architettura ad Alto Livello
 
 ```
-[ Client Web / Mobile / External Services ]
-                  |
-               REST API (v1)
-                  |
-        Application Layer (Django)
-                  |
-            Business Logic
-                  |
-              Persistence Layer
-                  |
-                Database
+Client (Web / Mobile / External Services)
+                ↓
+            REST API v1
+                ↓
+       Application Layer (Django)
+                ↓
+         Business Logic Layer
+                ↓
+          Persistence Layer (ORM)
+                ↓
+              Database
 ```
 
 ---
 
-# Separazione dei Livelli
+# Separazione dei Layer
 
-## 1️⃣ Presentation Layer
+## 1️⃣ Presentation Layer (Frontend)
 
-Responsabilità:
-
-* interfaccia utente (React)
-* gestione stato client
-* chiamate API
-* integrazioni esterne
-
-Caratteristiche:
-
-* completamente indipendente dal backend
-* nessuna logica di business
-* comunicazione esclusivamente via REST
+* React (target)
+* Stato client
+* Chiamate API
+* Nessuna logica di business
+* Nessun accesso diretto al database
 
 ---
 
@@ -77,43 +115,45 @@ Caratteristiche:
 Posizione:
 
 ```
+backend/config/
 backend/apps/
 ```
 
 Responsabilità:
 
-* esposizione API REST
-* autenticazione e autorizzazione
-* validazione input
-* serializzazione
-* routing
-* permessi
-* admin interface
+* Routing
+* Autenticazione
+* Permessi
+* Serializzazione
+* Validazione input
+* Versioning API
+* Admin interface
 
-⚠️ Questo layer non contiene logica di business complessa.
+⚠ Vietato inserire business logic complessa in:
 
-Views e serializer non devono contenere regole di dominio articolate.
+* serializer
+* admin
+* signals
 
 ---
 
 ## 3️⃣ Business Logic Layer
 
-La logica di dominio è mantenuta:
+Vive dentro le app.
 
-* all’interno delle app
-* oppure in moduli dedicati (`services.py`, `selectors.py`)
+Può essere organizzata in:
 
-In questa fase:
+```
+services.py
+selectors.py
+```
 
-* privilegiamo semplicità e chiarezza
-* evitiamo separazioni premature
-* evitiamo pattern complessi non necessari
+Principi:
 
-La business logic:
-
-* non vive nei serializer
-* non vive negli admin
-* non vive nei signals (salvo casi motivati)
+* Nessuna logica nei serializer
+* Nessuna logica negli admin
+* Nessuna logica complessa nei signals
+* Nessuna duplicazione
 
 ---
 
@@ -122,101 +162,74 @@ La business logic:
 Tecnologie:
 
 * Django ORM
-* PostgreSQL (target produzione)
-* SQLite (solo sviluppo locale)
+* SQLite (sviluppo)
+* PostgreSQL (produzione target)
 
-Responsabilità:
+Regole:
 
-* persistenza dati
-* migrazioni versionate
-* integrità referenziale
-
-Nessuna query SQL raw senza motivazione documentata.
+* Migrazioni obbligatorie
+* Nessuna modifica manuale al DB
+* Nessuna query raw non documentata
 
 ---
 
-# Struttura del Progetto (Target Ufficiale)
+# Struttura Ufficiale Attuale (Stato Reale)
 
 ```
 backend/
 ├── manage.py
+├── db.sqlite3
 │
-├── config/                     # Configurazione Django
-│   ├── __init__.py
+├── config/
 │   ├── asgi.py
 │   ├── wsgi.py
 │   ├── urls.py
 │   └── settings/
-│       ├── __init__.py
 │       ├── base.py
 │       ├── dev.py
 │       └── prod.py
 │
 ├── apps/
-│   ├── accounts/
-│   │   ├── models.py
-│   │   ├── admin.py
-│   │   ├── services.py
-│   │   ├── api/
-│   │   ├── urls.py
-│   │   └── migrations/
+│   ├── core/
+│   │   └── models.py      ← TimeStampedModel (abstract)
 │   │
-│   ├── products/
-│   │   ├── models.py
-│   │   ├── admin.py
-│   │   ├── services.py
-│   │   ├── api/
-│   │   ├── urls.py
-│   │   └── migrations/
-│   │
-│   ├── orders/
-│   │   ├── models.py
-│   │   ├── admin.py
-│   │   ├── services.py
-│   │   ├── api/
-│   │   ├── urls.py
-│   │   └── migrations/
-│   │
-│   └── shared/
-│       ├── permissions.py
-│       ├── mixins.py
-│       └── utils.py
+│   └── accounts/
+│       ├── models.py      ← Custom User
+│       ├── admin.py
+│       ├── apps.py
+│       └── migrations/
 │
-├── tests/
-└── requirements/
+├── requirements/
+└── venv/
 ```
-
-Il virtual environment non fa parte dell’architettura.
 
 ---
 
-# Settings Strategy (Regola Ufficiale)
+# Modulo Core (Infrastruttura Dominio)
 
-Il progetto utilizza settings modulari:
+`apps/core/` contiene componenti riutilizzabili.
 
-* `base.py` → configurazioni comuni
-* `dev.py` → sviluppo locale
-* `prod.py` → produzione
+Esempio:
 
-Non è ammesso utilizzare un unico `settings.py` monolitico.
+* TimeStampedModel (abstract)
+
+Non è un dominio business.
+Non è registrato in INSTALLED_APPS.
 
 ---
 
 # Custom User Model (Regola Obbligatoria)
 
-Il progetto utilizza un **Custom User Model** estendendo `AbstractUser`.
+Il progetto utilizza un Custom User Model:
 
-Motivazioni:
-
-* flessibilità futura
-* estensione campi
-* gestione loyalty
-* compatibilità evolutiva
+```python
+class User(AbstractUser, TimeStampedModel)
+```
 
 È obbligatorio:
 
 ```python
-settings.AUTH_USER_MODEL
+AUTH_USER_MODEL = "accounts.User"
 ```
 
 È vietato:
@@ -225,16 +238,18 @@ settings.AUTH_USER_MODEL
 from django.contrib.auth.models import User
 ```
 
+Motivazioni:
+
+* estensibilità futura
+* compatibilità JWT
+* gestione loyalty
+* flessibilità RBAC
+
 ---
 
-# API Design Strategy
+# API Strategy
 
-Le API sono:
-
-* RESTful
-* versionate
-
-Formato:
+Formato ufficiale:
 
 ```
 /api/v1/accounts/
@@ -242,25 +257,30 @@ Formato:
 /api/v1/orders/
 ```
 
-Il versioning è obbligatorio per prevenire breaking changes futuri.
+Regole:
+
+* Versioning obbligatorio
+* Nessuna API non versionata
+* Default permission: IsAuthenticated
+* Endpoint pubblici esplicitamente dichiarati
 
 ---
 
-# Regole Fondamentali (Non Negoziabili)
+# Regole Fondamentali
 
-## Regola 1 – Unica Fonte di Verità
+## Regola 1 — Unica Fonte di Verità
 
 Ogni concetto di business ha una sola definizione.
 
-È vietato:
+Vietato:
 
-* duplicare modelli
 * duplicare logica
-* duplicare naming incoerente
+* duplicare modelli
+* naming incoerente
 
 ---
 
-## Regola 2 – Dipendenze Direzionali
+## Regola 2 — Dipendenze Direzionali
 
 Flusso corretto:
 
@@ -274,36 +294,27 @@ API / Admin
    Database
 ```
 
-È vietato:
+Vietato:
 
 * import circolari
-* logica complessa nei serializer
-* logica di dominio negli admin
-* accoppiamento frontend-backend
+* logica nei serializer
+* logica negli admin
 
 ---
 
-## Regola 3 – Modelli Django
-
-* tutti i `models.Model` vivono in `apps/*/models.py`
-* nessun modello fuori da app registrate
-* naming leggibile e coerente
-
----
-
-## Regola 4 – API First
+## Regola 3 — API First
 
 Ogni funzionalità deve essere esposta via API.
 
-Il frontend:
+Frontend:
 
-* non accede al database
+* non accede al DB
+* non contiene regole dominio
 * non dipende da template Django
-* non contiene regole di dominio
 
 ---
 
-# Domini di Business
+# Domini Previsti
 
 ## Accounts
 
@@ -314,69 +325,75 @@ Il frontend:
 * ruoli e permessi
 * loyalty
 
----
-
 ## Products
 
-* catalogo pizze
+* catalogo
 * categorie
-* ingredienti
-* allergeni
-* pricing e varianti
-
----
+* varianti
+* pricing
 
 ## Orders
 
 * carrello
 * ordini
-* stati ordine
-* storico e tracciabilità
+* stati
+* storico
 
 ---
 
-# Migrazioni e Database
+# Struttura Target Evolutiva (Non Ancora Implementata)
+
+```
+apps/
+├── accounts/
+│   ├── models.py
+│   ├── services.py
+│   ├── api/
+│   └── urls.py
+│
+├── products/
+├── orders/
+├── payments/
+```
+
+Questa è direzione futura, non stato attuale.
+
+---
+
+# Migrazioni
 
 Regole:
 
-* ogni modifica ai modelli → migrazione obbligatoria
-* nessuna modifica manuale al database
-* nessuna manipolazione fuori ORM senza documentazione
+* Ogni modifica ai modelli → makemigrations + migrate
+* Migrazioni versionate
+* Nessuna manipolazione manuale DB
+
+---
+
+# Database Strategy
 
 Ambienti:
 
-* sviluppo → SQLite
-* produzione → PostgreSQL
+* Dev → SQLite
+* Prod → PostgreSQL
+
+Futuro:
+
+* Redis
+* Celery
+* Docker
 
 ---
 
-# Sicurezza
+# Estensioni Future
 
-* autenticazione token-based (DRF)
-* permessi granulari
-* validazione server-side
-* logging eventi critici
-* separazione configurazioni ambiente
-
----
-
-# Estensioni Future Previste
-
+* JWT Authentication
+* RBAC avanzato
 * Payments
 * Delivery
 * Reviews
 * Analytics
-* Machine Learning
-
-L’architettura è progettata per integrare nuovi domini senza rompere quelli esistenti.
-
----
-
-# Documenti Correlati
-
-* `README.md` → presentazione pubblica
-* `docs/README_INTERNAL.md` → guida tecnica operativa
-* `docs/ARCHITECTURE.md` → riferimento architetturale ufficiale
+* Observability
 
 ---
 
@@ -384,6 +401,8 @@ L’architettura è progettata per integrare nuovi domini senza rompere quelli e
 
 Se una modifica viola questo documento:
 
-la modifica è da rifiutare.
+La modifica è da rifiutare.
 
 Questo file rappresenta la **verità architetturale ufficiale** del progetto PizzaMama Market.
+
+

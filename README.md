@@ -1,4 +1,4 @@
-![PizzaMama Enterprise](https://images.openai.com/static-rsc-3/7InvxiSJU5gtaEC6KE8vIb0j_MsLbFGBemTCdZt7KBxG6MkkSdI5HbhHY3SK4a1qopU84K51JamSW3JKj8hDjF-Aau_sS1eKzOegrjC--yo?purpose=fullsize&v=1)
+![PizzaMama Enterprise](https://images.openai.com/static-rsc-3/7InvxiSJU5gtaEC6KE8vIb0j_MsLbFGBemTCdZt7KBxG6MkkSdI5HbhHY3SK4a1qopU84K51JamSW3JKj8hDjF-Aau_sS1eKzOegrjC--yo?purpose=fullsize\&v=1)
 
 # PizzaMama Market 🍕
 
@@ -16,11 +16,11 @@ Non si tratta di un semplice progetto dimostrativo, ma di una **base reale pront
 
 PizzaMama Market nasce con l’obiettivo di:
 
-- modellare correttamente domini di business reali
-- separare in modo chiaro frontend, backend e logica di dominio
-- ridurre il debito tecnico nel tempo
-- supportare nuove funzionalità senza riscritture invasive
-- fungere da base per applicazioni web, mobile e integrazioni esterne
+* modellare correttamente domini di business reali
+* separare in modo chiaro frontend, backend e logica di dominio
+* ridurre il debito tecnico nel tempo
+* supportare nuove funzionalità senza riscritture invasive
+* fungere da base per applicazioni web, mobile e integrazioni esterne
 
 ---
 
@@ -28,17 +28,17 @@ PizzaMama Market nasce con l’obiettivo di:
 
 L’applicazione adotta un approccio **API-first**, con una netta separazione tra:
 
-- logica di business
-- livello applicativo
-- interfacce (API e UI)
+* logica di business
+* livello applicativo
+* interfacce (API e UI)
 
 Principi architetturali adottati:
 
-- separazione completa frontend / backend
-- backend indipendente dal rendering
-- domini modulari e ben isolati
-- progettazione orientata alla scalabilità
-- codice pensato per evoluzione continua
+* separazione completa frontend / backend
+* backend indipendente dal rendering
+* domini modulari e ben isolati
+* progettazione orientata alla scalabilità
+* codice pensato per evoluzione continua
 
 ---
 
@@ -46,27 +46,28 @@ Principi architetturali adottati:
 
 ### Backend (API)
 
-- Python 3.10+
-- Django 5.x
-- Django REST Framework
-- SQLite (ambiente di sviluppo)
-- PostgreSQL (ambiente di produzione)
-- Redis (cache e sessioni – previsto)
-- Celery (task asincroni – previsto)
+* Python 3.10+
+* Django 5.x
+* Django REST Framework
+* SQLite (ambiente di sviluppo)
+* PostgreSQL (ambiente di produzione – target)
+* Redis (previsto)
+* Celery (previsto)
+* JWT (previsto)
 
 ### Frontend (Web App)
 
-- React
-- JavaScript / TypeScript
-- Consumo API REST
-- CSS modulare e scalabile
+* React
+* JavaScript / TypeScript
+* Consumo API REST
+* CSS modulare e scalabile
 
 ### Tooling & DevOps
 
-- Docker e Docker Compose
-- Gestione variabili d’ambiente
-- Git
-- Progetto pronto per pipeline CI/CD
+* Docker (previsto)
+* Gestione variabili d’ambiente
+* Git
+* Progetto pronto per pipeline CI/CD
 
 ---
 
@@ -74,25 +75,27 @@ Principi architetturali adottati:
 
 ```text
 pizzamama-market/
-├── backend/                  # Backend Django (API)
-│   ├── pizzamama/            # Configurazione progetto
-│   ├── apps/                 # App Django (accounts, products, orders, ...)
+├── backend/
 │   ├── manage.py
-|   ├── venv/
-│   └── db.sqlite3
+│   ├── config/                # Configurazione progetto Django
+│   ├── apps/                  # App Django (accounts, ...)
+│   ├── requirements/
+│   └── db.sqlite3 (dev)
 │
-├── frontend/                 # Frontend React (in sviluppo)
+├── frontend/
 │   ├── src/
 │   ├── public/
 │   └── package.json
 │
-├── docs/                     # Documentazione tecnica
+├── docs/
 │
-├── docker-compose.yml
+├── docker-compose.yml (previsto)
 └── README.md
-````
+```
 
 La documentazione tecnica dettagliata e le decisioni architetturali sono mantenute nella cartella **docs**, separata dal README principale.
+
+Il virtual environment non fa parte dell’architettura.
 
 ---
 
@@ -100,12 +103,12 @@ La documentazione tecnica dettagliata e le decisioni architetturali sono mantenu
 
 ### Accounts
 
-* gestione utenti personalizzati
+* gestione utenti personalizzati (Custom User Model)
 * profili e preferenze
 * indirizzi di consegna
-* sistemi di fidelizzazione
+* sistemi di fidelizzazione (previsto)
 
-### Products
+### Products (previsto)
 
 * catalogo pizze
 * categorie
@@ -113,24 +116,25 @@ La documentazione tecnica dettagliata e le decisioni architetturali sono mantenu
 * allergeni
 * pricing e varianti
 
-### Orders
+### Orders (previsto)
 
 * carrello
 * gestione ordini
 * workflow di stato
 * storicizzazione e tracciabilità
 
-I domini **Payments**, **Delivery**, **Reviews** e **Analytics** sono previsti in architettura come estensioni future.
+I domini **Payments**, **Delivery**, **Reviews** e **Analytics** sono previsti come estensioni future.
 
 ---
 
 ## Sicurezza e Qualità
 
-* autenticazione e autorizzazioni robuste
-* validazione degli input
+* autenticazione via SessionAuthentication (attuale)
+* permessi DRF con IsAuthenticated di default
+* validazione server-side
 * protezione CSRF e CORS
-* logging applicativo
-* struttura pronta per audit e best practice di sicurezza
+* configurazioni ambiente separate
+* predisposizione per JWT e RBAC avanzato
 
 ---
 
@@ -142,7 +146,7 @@ I domini **Payments**, **Delivery**, **Reviews** e **Analytics** sono previsti i
 cd backend
 python -m venv venv
 venv\Scripts\activate          # Windows
-pip install -r requirements.txt
+pip install -r requirements/base.txt
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
@@ -178,44 +182,62 @@ http://localhost:5173/
 
 ---
 
-## Analytics e Business Intelligence (Roadmap)
-
-Il progetto è progettato per supportare:
-
-* analisi del comportamento utenti
-* metriche su ordini e fatturato
-* performance dei prodotti
-* customer retention e insight operativi
-
----
-
-## Machine Learning – Customer Satisfaction (Roadmap)
-
-Sono previste integrazioni future per:
-
-* analisi del sentiment delle recensioni
-* customer satisfaction score
-* previsione del churn
-* supporto alle decisioni di marketing e operations
-
----
-
 ## Testing e Manutenibilità
 
 * struttura pronta per test unitari
 * test delle API
 * codice organizzato per refactoring continuo
-* orientamento alla manutenzione di lungo periodo
+* migrazioni versionate
 
 ---
 
 ## Stato del Progetto
 
-* architettura definita
-* domini di business chiari e modulari
-* backend API solido
-* frontend in sviluppo
-* base pronta per crescita progressiva
+* settings modulari attivi
+* Custom User Model implementato
+* DRF configurato
+* API versionata `/api/v1/`
+* base architetturale stabilizzata
+* foundation pronta per crescita progressiva
+
+---
+
+## Checklist Architetturale
+
+### Fondamenta
+
+* [ ] Settings modulari attivi (base/dev/prod)
+* [ ] Custom User Model configurato
+* [ ] AUTH_USER_MODEL impostato correttamente
+* [ ] Nessun uso diretto di auth.User
+* [ ] BASE_DIR corretto
+
+### API
+
+* [ ] Versioning `/api/v1/`
+* [ ] IsAuthenticated come default
+* [ ] Nessuna API esposta involontariamente
+* [ ] Nessuna logica di dominio nei serializer
+
+### Database
+
+* [ ] Ogni modifica ai modelli → makemigrations + migrate
+* [ ] Nessuna modifica manuale al database
+* [ ] Migrazioni coerenti
+
+### Sicurezza
+
+* [ ] Nessuna credenziale hardcoded
+* [ ] DEBUG disattivabile in produzione
+* [ ] BasicAuthentication rimossa
+* [ ] Separazione ambienti corretta
+
+### Architettura
+
+* [ ] Nessun import circolare
+* [ ] Nessuna duplicazione logica
+* [ ] Logica di business fuori da admin e serializer
+* [ ] Coerenza con docs/ARCHITECTURE.md
 
 ---
 
@@ -229,3 +251,5 @@ PizzaMama Market è un progetto orientato a:
 * contesti reali di business
 
 È una base progettuale pensata per evolvere nel tempo, mantenendo chiarezza, qualità e sostenibilità.
+
+
