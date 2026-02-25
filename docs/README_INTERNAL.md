@@ -1,51 +1,51 @@
-# 🍕 PizzaMama Market – Documentazione Tecnica Interna (Allineata)
+# 🍕 PizzaMama Market – Internal Technical Documentation (Aligned)
 
 ---
 
-# Scopo di questo documento
+# Purpose of This Document
 
-Questo documento rappresenta la **guida tecnica operativa interna** del progetto PizzaMama Market.
+This document represents the **internal operational technical guide** of the PizzaMama Market project.
 
-È destinato a:
+It is intended for:
 
-* sviluppatori che lavorano al backend
-* mantenere coerenza architetturale
-* guidare evoluzione tecnica controllata
-* prevenire debito tecnico
-* facilitare onboarding
+* backend developers working on the project
+* maintaining architectural consistency
+* guiding controlled technical evolution
+* preventing technical debt
+* facilitating onboarding
 
-Il `README.md` principale rimane orientato al prodotto.
-Questo documento è orientato all’implementazione tecnica reale.
+The main `README.md` remains product-oriented.
+This document is focused on real technical implementation.
 
 ---
 
-# Visione Tecnica
+# Technical Vision
 
-PizzaMama Market è una piattaforma **API-first** costruita con:
+PizzaMama Market is an **API-first** platform built with:
 
 * Python
 * Django
 * Django REST Framework
-* SQLite (sviluppo)
-* PostgreSQL (target produzione)
+* SQLite (development)
+* PostgreSQL (production target)
 
-Separazione chiara tra:
+Clear separation between:
 
 * Application Layer (Django)
-* Business Logic
+* Business Logic Layer
 * Persistence Layer
-* Presentation Layer (frontend indipendente)
+* Presentation Layer (independent frontend)
 
-Il backend è progettato per essere:
+The backend is designed to be:
 
-* riutilizzabile
-* modulare
-* sicuro
-* evolvibile
+* reusable
+* modular
+* secure
+* evolvable
 
 ---
 
-# Architettura Concettuale
+# Conceptual Architecture
 
 ```id="arch001"
 Client (Web / Mobile / External Services)
@@ -63,19 +63,19 @@ Client (Web / Mobile / External Services)
 
 ---
 
-# Principi Architetturali
+# Architectural Principles
 
 * API-first
-* separazione responsabilità
-* dominio modulare
+* separation of responsibilities
+* modular domain structure
 * zero trust mindset
-* evoluzione incrementale
-* evitare over-engineering
-* configurazioni ambiente separate
+* incremental evolution
+* avoid premature over-engineering
+* separated environment configurations
 
 ---
 
-# Struttura Backend (Stato Attuale Reale)
+# Backend Structure (Current Real State)
 
 ```id="struct001"
 backend/
@@ -86,6 +86,7 @@ backend/
 │   ├── asgi.py
 │   ├── wsgi.py
 │   ├── urls.py
+│   ├── api_urls.py
 │   └── settings/
 │       ├── base.py
 │       ├── dev.py
@@ -93,43 +94,55 @@ backend/
 │
 ├── apps/
 │   ├── core/
-│   │   └── models.py        # TimeStampedModel (abstract)
+│   │   └── models.py              # TimeStampedModel (abstract)
 │   │
-│   └── accounts/
-│       ├── models.py        # Custom User
+│   ├── accounts/
+│   │   ├── models.py              # Custom User + Profile + Address
+│   │   ├── admin.py
+│   │   ├── api/
+│   │   └── migrations/
+│   │
+│   ├── products/
+│   │   ├── models.py              # Category, Ingredient, Pizza, etc.
+│   │   ├── admin.py
+│   │   ├── api/
+│   │   └── migrations/
+│   │
+│   └── orders/
+│       ├── models.py              # Cart, Order, OrderItem, Payment
 │       ├── admin.py
-│       ├── apps.py
+│       ├── api/
 │       └── migrations/
 │
 ├── requirements/
 └── venv/
 ```
 
-Nota:
-Il virtual environment non è parte dell’architettura logica.
+Note:
+The virtual environment is not part of the logical architecture.
 
 ---
 
 # Settings Strategy
 
-Il progetto utilizza settings modulari:
+The project uses modular settings:
 
-* `base.py` → configurazioni comuni
-* `dev.py` → sviluppo
-* `prod.py` → produzione
+* `base.py` → shared configuration
+* `dev.py` → development
+* `prod.py` → production
 
-Regole:
+Rules:
 
-* Nessun settings monolitico
-* Nessuna credenziale hardcoded
-* Separazione ambienti obbligatoria
-* Preparazione a Docker / CI/CD
+* No monolithic settings file
+* No hardcoded production credentials
+* Mandatory environment separation
+* Prepared for Docker / CI/CD
 
 ---
 
 # Django REST Framework
 
-Configurazione attuale:
+Current configuration:
 
 ```python
 DEFAULT_PERMISSION_CLASSES = [
@@ -137,105 +150,105 @@ DEFAULT_PERMISSION_CLASSES = [
 ]
 
 DEFAULT_AUTHENTICATION_CLASSES = [
-    SessionAuthentication
+    SessionAuthentication,
+    TokenAuthentication
 ]
 ```
 
-Stato sicurezza attuale:
+Current security status:
 
-* Tutte le API protette di default
-* BasicAuthentication rimossa
-* Autenticazione via sessione
-* JWT previsto come evoluzione futura
+* All APIs protected by default
+* BasicAuthentication removed
+* Session and Token authentication active
+* JWT planned as future evolution
 
 ---
 
 # Naming Strategy
 
-Regole ufficiali:
+Official rules:
 
-| Elemento             | Convenzione         |
-| -------------------- | ------------------- |
-| URL pubblico         | kebab-case italiano |
-| Variabili dominio    | snake_case italiano |
-| Classi dominio       | PascalCase italiano |
-| Framework Django/DRF | inglese             |
+| Element              | Convention         |
+| -------------------- | ------------------ |
+| Public URL           | Italian kebab-case |
+| Domain variables     | Italian snake_case |
+| Domain classes       | Italian PascalCase |
+| Django/DRF framework | English            |
 
-Separazione netta tra dominio e framework.
+Clear separation between domain and framework.
 
 ---
 
-# Modulo `core`
+# `core` Module
 
-La cartella `apps/core/` contiene componenti infrastrutturali condivisi.
+The `apps/core/` folder contains shared infrastructure components.
 
-Attualmente include:
+Currently includes:
 
 * `TimeStampedModel` (abstract)
 
-Non rappresenta un dominio business.
-
-Non deve contenere modelli concreti.
+It does not represent a business domain.
+It must not contain concrete models.
 
 ---
 
 # Custom User Model
 
-Il progetto utilizza un Custom User Model fin dall’inizio.
+The project uses a Custom User Model from the beginning.
 
-Implementazione:
+Implementation:
 
 ```python
 class User(AbstractUser, TimeStampedModel)
 ```
 
-Configurazione obbligatoria:
+Mandatory configuration:
 
 ```python
 AUTH_USER_MODEL = "accounts.User"
 ```
 
-Regole:
+Rules:
 
-* Mai importare `User` da `django.contrib.auth.models`
-* Usare sempre `settings.AUTH_USER_MODEL`
-* Nessuna relazione diretta verso `auth.User`
+* Never import `User` from `django.contrib.auth.models`
+* Always use `settings.AUTH_USER_MODEL`
+* No direct relation to `auth.User`
 
 ---
 
-# Ruolo della Cartella `apps/`
+# Role of the `apps/` Folder
 
-Contiene tutto il codice applicativo.
+Contains all application code.
 
-Ogni app include:
+Each app includes:
 
-* modelli
+* models
 * admin
-* logica di dominio (in futuro services.py)
-* API (in futuro api/)
-* migrazioni
+* domain logic (future `services.py`)
+* API layer (`api/`)
+* migrations
 
-Regola fondamentale:
+Fundamental rule:
 
-> Nessun modello Django fuori da `apps/`.
+> No Django model outside `apps/`.
 
 ---
 
-# Logica di Dominio
+# Domain Logic
 
-Attualmente minima (fase foundation).
+Currently implemented inside models with controlled scope.
 
-Direzione futura:
+Future direction:
 
-* `services.py`
-* separazione read/write (se necessario)
-* nessuna logica complessa in serializer o admin
+* `services.py` per domain
+* optional read/write separation
+* no complex logic inside serializers or admin
 
 ---
 
 # API Strategy
 
-Formato ufficiale:
+Official format:
 
 ```id="api001"
 /api/v1/accounts/
@@ -243,26 +256,33 @@ Formato ufficiale:
 /api/v1/orders/
 ```
 
-Regole:
+Rules:
 
-* Versioning obbligatorio
-* Nessuna API non versionata
+* Versioning mandatory
+* No unversioned APIs
 * Default permission: IsAuthenticated
+* Public endpoints explicitly declared
+
+API routing is centralized in:
+
+```text
+backend/config/api_urls.py
+```
 
 ---
 
 # Database Strategy
 
-Ambienti:
+Environments:
 
 * Dev → SQLite
 * Prod → PostgreSQL
 
-Regole:
+Rules:
 
-* Ogni modifica ai modelli → migrazione obbligatoria
-* Nessuna modifica manuale al database
-* Workflow standard:
+* Every model change → mandatory migration
+* No manual database modification
+* Standard workflow:
 
 ```bash
 python manage.py makemigrations
@@ -271,91 +291,96 @@ python manage.py migrate
 
 ---
 
-# Sicurezza
+# Security
 
-Principi attuali:
+Current principles:
 
 * Default deny
-* IsAuthenticated globale
-* Validazione server-side
-* SessionAuthentication attiva
-* Preparazione a JWT
-* Settings separati per ambiente
+* Global IsAuthenticated
+* Server-side validation
+* SessionAuthentication active
+* TokenAuthentication active
+* Prepared for JWT
+* Separated environment settings
 
-Futuro:
+Future:
 
 * JWT
-* RBAC avanzato
-* Logging strutturato
+* Advanced RBAC
+* Structured logging
 * Audit trail
 
 ---
 
 # Testing Strategy
 
-Struttura pronta per:
+Structure prepared for:
 
-* test modelli
-* test servizi
-* test API
-* test integrazione
+* model tests
+* service tests
+* API tests
+* integration tests
 
-Obiettivo:
+Objective:
 
-* regressioni controllate
-* refactor sicuri
-* affidabilità crescente
-
----
-
-# Linee Guida di Sviluppo
-
-* mantenere app piccole
-* evitare logica nei serializer
-* evitare logica negli admin
-* evitare import circolari
-* refactor incrementali
-* ogni modifica deve avere motivazione architetturale
+* controlled regressions
+* safe refactors
+* increasing reliability
 
 ---
 
-# Stato Attuale del Progetto
+# Development Guidelines
 
-Foundation completata:
-
-* settings modulari
-* DRF configurato
-* Custom User attivo
-* BASE_DIR corretto
-* migrazioni pulite
-* admin funzionante
-* API versionata `/api/v1/`
-* sicurezza default deny
+* keep apps focused and modular
+* avoid logic inside serializers
+* avoid logic inside admin
+* avoid circular imports
+* perform incremental refactors
+* every modification must have architectural justification
 
 ---
 
-# Obiettivo Evolutivo
+# Current Project State
 
-Prossimi domini:
+Foundation and core domains completed:
 
-* Products
-* Orders
-* Payments
-* Delivery
+* modular settings
+* DRF configured
+* Token authentication active
+* Custom User implemented
+* Products domain modeled
+* Orders domain modeled
+* Clean migrations
+* Working admin
+* Versioned API `/api/v1/`
+* Centralized API routing
+* Default deny security model
+
+---
+
+# Evolutionary Objective
+
+Next logical evolutions:
+
+* Service layer formalization
+* Production hardening
+* JWT authentication
+* Payments domain expansion
+* Delivery integration
 * Reviews
+* Observability
 
-Il sistema è progettato per crescere senza riscritture invasive.
+The system is designed to grow without invasive rewrites.
 
 ---
 
-# Nota Finale
+# Final Note
 
-Questo documento deve riflettere lo stato reale del progetto.
+This document must always reflect the real state of the project.
 
-Se codice e documento divergono:
+If code and document diverge:
 
-* va aggiornato il documento
-* oppure va corretto il codice
+* either the document must be updated
+* or the code must be corrected
 
-La coerenza è obbligatoria.
-
+Consistency is mandatory.
