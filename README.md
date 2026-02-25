@@ -2,83 +2,83 @@
 
 # PizzaMama Market 🍕
 
-## Piattaforma E-commerce Professionale per Pizzerie Moderne
+## Professional E-commerce Platform for Modern Pizzerias
 
-**PizzaMama Market** è una piattaforma e-commerce moderna e scalabile, progettata per pizzerie e attività di ristorazione che desiderano un sistema solido, estendibile e orientato al business.
+**PizzaMama Market** is a modern and scalable e-commerce platform designed for pizzerias and food businesses that require a solid, extensible, and business-oriented system.
 
-Il progetto è sviluppato con **Django (backend API)** e **React (frontend)** e segue principi di **architettura professionale**, **manutenibilità** e **crescita progressiva**.
+The project is developed using **Django (backend API)** and **React (frontend)** and follows principles of **professional architecture**, **maintainability**, and **progressive growth**.
 
-Non si tratta di un semplice progetto dimostrativo, ma di una **base reale pronta per evolvere verso ambienti di produzione**.
-
----
-
-## Obiettivi del Progetto
-
-PizzaMama Market nasce con l’obiettivo di:
-
-* modellare correttamente domini di business reali
-* separare in modo chiaro frontend, backend e logica di dominio
-* ridurre il debito tecnico nel tempo
-* supportare nuove funzionalità senza riscritture invasive
-* fungere da base per applicazioni web, mobile e integrazioni esterne
+This is not a simple demonstration project, but a **real foundation designed to evolve toward production environments**.
 
 ---
 
-## Visione Architetturale
+## Project Goals
 
-L’applicazione adotta un approccio **API-first**, con una netta separazione tra:
+PizzaMama Market was created with the goal of:
 
-* logica di business
-* livello applicativo
-* interfacce (API e UI)
-
-Principi architetturali adottati:
-
-* separazione completa frontend / backend
-* backend indipendente dal rendering
-* domini modulari e ben isolati
-* progettazione orientata alla scalabilità
-* codice pensato per evoluzione continua
+* correctly modeling real business domains
+* clearly separating frontend, backend, and domain logic
+* reducing technical debt over time
+* supporting new features without invasive rewrites
+* serving as a foundation for web, mobile, and external integrations
 
 ---
 
-## Stack Tecnologico
+## Architectural Vision
+
+The application adopts an **API-first** approach, with a clear separation between:
+
+* business logic
+* application layer
+* interfaces (API and UI)
+
+Architectural principles adopted:
+
+* complete frontend / backend separation
+* backend independent from rendering
+* modular and well-isolated domains
+* scalability-oriented design
+* code structured for continuous evolution
+
+---
+
+## Technology Stack
 
 ### Backend (API)
 
 * Python 3.10+
 * Django 5.x
 * Django REST Framework
-* SQLite (ambiente di sviluppo)
-* PostgreSQL (ambiente di produzione – target)
-* Redis (previsto)
-* Celery (previsto)
-* JWT (previsto)
+* SQLite (development environment)
+* PostgreSQL (production target)
+* Redis (planned)
+* Celery (planned)
+* JWT (planned)
 
 ### Frontend (Web App)
 
 * React
 * JavaScript / TypeScript
-* Consumo API REST
-* CSS modulare e scalabile
+* REST API consumption
+* Modular and scalable CSS
 
 ### Tooling & DevOps
 
-* Docker (previsto)
-* Gestione variabili d’ambiente
+* Docker (planned)
+* Environment variable management
 * Git
-* Progetto pronto per pipeline CI/CD
+* Project ready for CI/CD pipelines
 
 ---
 
-## Struttura Generale del Progetto 📁
+## General Project Structure 📁
 
 ```text
 pizzamama-market/
 ├── backend/
 │   ├── manage.py
-│   ├── config/                # Configurazione progetto Django
-│   ├── apps/                  # App Django (accounts, ...)
+│   ├── config/                # Django project configuration
+│   ├── apps/                  # Django apps (accounts, ...)
 │   ├── requirements/
 │   └── db.sqlite3 (dev)
 │
@@ -89,56 +89,56 @@ pizzamama-market/
 │
 ├── docs/
 │
-├── docker-compose.yml (previsto)
+├── docker-compose.yml (planned)
 └── README.md
 ```
 
-La documentazione tecnica dettagliata e le decisioni architetturali sono mantenute nella cartella **docs**, separata dal README principale.
+Detailed technical documentation and architectural decisions are maintained inside the **docs** folder, separated from the main README.
 
-Il virtual environment non fa parte dell’architettura.
+The virtual environment is not part of the architecture.
 
 ---
 
-## Domini di Business (Backend)
+## Business Domains (Backend)
 
 ### Accounts
 
-* gestione utenti personalizzati (Custom User Model)
-* profili e preferenze
-* indirizzi di consegna
-* sistemi di fidelizzazione (previsto)
+* custom user management (Custom User Model)
+* profiles and preferences
+* delivery addresses
+* loyalty systems (planned)
 
-### Products (previsto)
+### Products (planned)
 
-* catalogo pizze
-* categorie
-* ingredienti
-* allergeni
-* pricing e varianti
+* pizza catalog
+* categories
+* ingredients
+* allergens
+* pricing and variants
 
-### Orders (previsto)
+### Orders (planned)
 
-* carrello
-* gestione ordini
-* workflow di stato
-* storicizzazione e tracciabilità
+* cart
+* order management
+* status workflow
+* historical tracking and traceability
 
-I domini **Payments**, **Delivery**, **Reviews** e **Analytics** sono previsti come estensioni future.
-
----
-
-## Sicurezza e Qualità
-
-* autenticazione via SessionAuthentication (attuale)
-* permessi DRF con IsAuthenticated di default
-* validazione server-side
-* protezione CSRF e CORS
-* configurazioni ambiente separate
-* predisposizione per JWT e RBAC avanzato
+The **Payments**, **Delivery**, **Reviews**, and **Analytics** domains are planned as future extensions.
 
 ---
 
-## Setup di Sviluppo
+## Security and Quality
+
+* authentication via SessionAuthentication (current)
+* DRF permissions with IsAuthenticated by default
+* server-side validation
+* CSRF and CORS protection
+* separated environment configurations
+* prepared for JWT and advanced RBAC
+
+---
+
+## Development Setup
 
 ### Backend
 
@@ -152,7 +152,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Backend disponibile su:
+Backend available at:
 
 ```
 http://127.0.0.1:8000/
@@ -166,7 +166,7 @@ npm install
 npm run dev
 ```
 
-Frontend disponibile su:
+Frontend available at:
 
 ```
 http://localhost:5173/
@@ -174,82 +174,80 @@ http://localhost:5173/
 
 ---
 
-## Comunicazione Frontend ↔ Backend
+## Frontend ↔ Backend Communication
 
-* comunicazione esclusivamente tramite API REST
-* backend riutilizzabile per web, mobile e servizi esterni
-* separazione completa tra presentazione e logica di business
-
----
-
-## Testing e Manutenibilità
-
-* struttura pronta per test unitari
-* test delle API
-* codice organizzato per refactoring continuo
-* migrazioni versionate
+* communication exclusively through REST APIs
+* reusable backend for web, mobile, and external services
+* complete separation between presentation and business logic
 
 ---
 
-## Stato del Progetto
+## Testing and Maintainability
 
-* settings modulari attivi
-* Custom User Model implementato
-* DRF configurato
-* API versionata `/api/v1/`
-* base architetturale stabilizzata
-* foundation pronta per crescita progressiva
+* structure prepared for unit testing
+* API testing
+* code organized for continuous refactoring
+* versioned migrations
 
 ---
 
-## Checklist Architetturale
+## Project Status
 
-### Fondamenta
+* modular settings active
+* Custom User Model implemented
+* DRF configured
+* versioned API `/api/v1/`
+* architectural foundation stabilized
+* foundation ready for progressive growth
 
-* [ ] Settings modulari attivi (base/dev/prod)
-* [ ] Custom User Model configurato
-* [ ] AUTH_USER_MODEL impostato correttamente
-* [ ] Nessun uso diretto di auth.User
-* [ ] BASE_DIR corretto
+---
+
+## Architectural Checklist
+
+### Foundations
+
+* [ ] Modular settings active (base/dev/prod)
+* [ ] Custom User Model configured
+* [ ] AUTH_USER_MODEL properly set
+* [ ] No direct use of auth.User
+* [ ] Correct BASE_DIR
 
 ### API
 
 * [ ] Versioning `/api/v1/`
-* [ ] IsAuthenticated come default
-* [ ] Nessuna API esposta involontariamente
-* [ ] Nessuna logica di dominio nei serializer
+* [ ] IsAuthenticated as default
+* [ ] No unintentionally exposed APIs
+* [ ] No domain logic inside serializers
 
 ### Database
 
-* [ ] Ogni modifica ai modelli → makemigrations + migrate
-* [ ] Nessuna modifica manuale al database
-* [ ] Migrazioni coerenti
+* [ ] Every model change → makemigrations + migrate
+* [ ] No manual database modifications
+* [ ] Consistent migrations
 
-### Sicurezza
+### Security
 
-* [ ] Nessuna credenziale hardcoded
-* [ ] DEBUG disattivabile in produzione
-* [ ] BasicAuthentication rimossa
-* [ ] Separazione ambienti corretta
+* [ ] No hardcoded credentials
+* [ ] DEBUG disabled in production
+* [ ] BasicAuthentication removed
+* [ ] Proper environment separation
 
-### Architettura
+### Architecture
 
-* [ ] Nessun import circolare
-* [ ] Nessuna duplicazione logica
-* [ ] Logica di business fuori da admin e serializer
-* [ ] Coerenza con docs/ARCHITECTURE.md
+* [ ] No circular imports
+* [ ] No duplicated logic
+* [ ] Business logic outside admin and serializers
+* [ ] Consistency with docs/ARCHITECTURE.md
 
 ---
 
-## Note Finali
+## Final Notes
 
-PizzaMama Market è un progetto orientato a:
+PizzaMama Market is a project focused on:
 
-* apprendimento avanzato
-* architettura backend professionale
-* sviluppo moderno di applicazioni web
-* contesti reali di business
+* advanced learning
+* professional backend architecture
+* modern web application development
+* real-world business contexts
 
-È una base progettuale pensata per evolvere nel tempo, mantenendo chiarezza, qualità e sostenibilità.
-
-
+It is a project foundation designed to evolve over time while maintaining clarity, quality, and sustainability.
