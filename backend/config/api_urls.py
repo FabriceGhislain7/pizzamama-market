@@ -10,12 +10,14 @@ from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
 )
+from drf_spectacular.utils import extend_schema
 
 
 # -------------------------------------------------------------------
 # API Root
 # -------------------------------------------------------------------
 
+@extend_schema(exclude=True)
 @api_view(["GET"])
 def radice_api(request):
     return Response({
