@@ -11,6 +11,10 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 from drf_spectacular.utils import extend_schema
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 
 # -------------------------------------------------------------------
@@ -19,20 +23,26 @@ from drf_spectacular.utils import extend_schema
 
 @extend_schema(exclude=True)
 @api_view(["GET"])
-def radice_api(request):
+def api_root(request):
     return Response({
-        "nome": "API PizzaMama Market",
-        "versione": "v1",
-        "stato": "attiva",
+        "name": "PizzaMama Market API",
+        "version": "v1",
+        "status": "active",
     })
 
 
 urlpatterns = [
-    path("", radice_api, name="radice-api"),
+    path("", api_root, name="api-root"),
 
+    # Schema & Docs
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path("docs/", SpectacularSwaggerView.as_view(url_name="schema")),
 
+    # Authentication (JWT - JSON Web Token)
+    path("auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+
+    # Domain APIs
     path("accounts/", include("apps.accounts.api.urls")),
     path("products/", include("apps.products.api.urls")),
     path("orders/", include("apps.orders.api.urls")),

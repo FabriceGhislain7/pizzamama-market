@@ -4,13 +4,15 @@ Base settings.
 
 import os
 from pathlib import Path
+from datetime import timedelta
+import dj_database_url
 
 
 # Base dir
 BASE_DIR = Path(__file__).resolve().parents[2]
 
 
-# Security (neutral defaults)
+# Security
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "unsafe-dev-key")
 
 DEBUG = False
@@ -30,16 +32,17 @@ INSTALLED_APPS = [
 
     # Third party
     "rest_framework",
-    "rest_framework.authtoken",
     "django_filters",
     "corsheaders",
     "drf_spectacular",
+    "rest_framework_simplejwt.token_blacklist",
 
     # Local
     "apps.accounts",
     "apps.products",
     "apps.orders",
 ]
+
 
 # Templates
 TEMPLATES = [
@@ -57,6 +60,7 @@ TEMPLATES = [
     },
 ]
 
+
 # Middleware
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -70,17 +74,27 @@ MIDDLEWARE = [
 ]
 
 
+# JWT (JSON Web Token) Configuration
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+
 # URLs
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-# Database (default SQLite)
+# Database
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
 }
 
 
@@ -109,14 +123,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 
 
-# DRF
+# DRF Configuration
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
@@ -131,7 +144,7 @@ REST_FRAMEWORK = {
 }
 
 
-# API schema
+# OpenAPI / Schema
 SPECTACULAR_SETTINGS = {
     "TITLE": "PizzaMama API",
     "VERSION": "1.0.0",
