@@ -1,21 +1,20 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from apps.orders.models import Order
-from .serializers import OrderSerializer
+from .serializers import OrderSerializer, OrderStatusSerializer
 
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    # Required for schema generation
     queryset = Order.objects.all()
 
-    # UUID support in OpenAPI
     lookup_field = "id"
     lookup_value_regex = "[0-9a-f-]{36}"
 
     def get_queryset(self):
-        # Prevent drf-spectacular from evaluating queryset with AnonymousUser
         if getattr(self, "swagger_fake_view", False):
             return self.queryset.none()
 
@@ -23,3 +22,25 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=True, methods=["post"], url_path="change-status")
+    def change_status(self, request, id=None):
+        order = self.get_object()
+
+        serializer = OrderStatusSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        new_status = serializer.validated_data["status"]
+
+        try:
+            order.change_status(new_status)
+        except ValueError as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {"detail": f"Order status updated to {order.status}"},
+            status=status.HTTP_200_OK,
+        )
