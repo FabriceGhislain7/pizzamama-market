@@ -6,21 +6,37 @@ import os
 from pathlib import Path
 from datetime import timedelta
 import dj_database_url
+from dotenv import load_dotenv
 
 
-# Base dir
+# -------------------------------------------------------------------
+# Base Directory
+# -------------------------------------------------------------------
+
 BASE_DIR = Path(__file__).resolve().parents[2]
 
+# Load environment variables (safe in development, ignored if .env not present)
+load_dotenv(BASE_DIR / ".env")
 
+
+# -------------------------------------------------------------------
 # Security
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "unsafe-dev-key")
+# -------------------------------------------------------------------
+
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+
+if not SECRET_KEY:
+    raise ValueError("DJANGO_SECRET_KEY environment variable is not set")
 
 DEBUG = False
 
 ALLOWED_HOSTS = []
 
 
+# -------------------------------------------------------------------
 # Applications
+# -------------------------------------------------------------------
+
 INSTALLED_APPS = [
     # Django
     "django.contrib.admin",
@@ -37,14 +53,17 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "rest_framework_simplejwt.token_blacklist",
 
-    # Local
+    # Local apps
     "apps.accounts",
     "apps.products",
     "apps.orders",
 ]
 
 
+# -------------------------------------------------------------------
 # Templates
+# -------------------------------------------------------------------
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -61,7 +80,10 @@ TEMPLATES = [
 ]
 
 
+# -------------------------------------------------------------------
 # Middleware
+# -------------------------------------------------------------------
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -74,7 +96,10 @@ MIDDLEWARE = [
 ]
 
 
-# JWT (JSON Web Token) Configuration
+# -------------------------------------------------------------------
+# JWT Configuration
+# -------------------------------------------------------------------
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
@@ -84,12 +109,18 @@ SIMPLE_JWT = {
 }
 
 
+# -------------------------------------------------------------------
 # URLs
+# -------------------------------------------------------------------
+
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-# Database
+# -------------------------------------------------------------------
+# Database (SQLite fallback, PostgreSQL ready)
+# -------------------------------------------------------------------
+
 DATABASES = {
     "default": dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
@@ -98,32 +129,50 @@ DATABASES = {
 }
 
 
+# -------------------------------------------------------------------
 # Internationalization
+# -------------------------------------------------------------------
+
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
 
-# Static
+# -------------------------------------------------------------------
+# Static Files
+# -------------------------------------------------------------------
+
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
-# Media
+# -------------------------------------------------------------------
+# Media Files
+# -------------------------------------------------------------------
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 
-# Default PK
+# -------------------------------------------------------------------
+# Default Primary Key Field
+# -------------------------------------------------------------------
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-# Custom user
+# -------------------------------------------------------------------
+# Custom User Model
+# -------------------------------------------------------------------
+
 AUTH_USER_MODEL = "accounts.User"
 
 
+# -------------------------------------------------------------------
 # DRF Configuration
+# -------------------------------------------------------------------
+
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -144,8 +193,43 @@ REST_FRAMEWORK = {
 }
 
 
+# -------------------------------------------------------------------
 # OpenAPI / Schema
+# -------------------------------------------------------------------
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "PizzaMama API",
     "VERSION": "1.0.0",
+}
+
+
+# -------------------------------------------------------------------
+# Logging Configuration
+# -------------------------------------------------------------------
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
 }

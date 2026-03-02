@@ -1,8 +1,4 @@
 from .base import *
-from dotenv import load_dotenv
-
-# Carica variabili ambiente solo in sviluppo
-load_dotenv(BASE_DIR / ".env")
 
 DEBUG = True
 
@@ -14,7 +10,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
-# In sviluppo permettiamo anche SessionAuthentication
+# In development allow session authentication (useful for browsable API)
 REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] += [
     "rest_framework.authentication.SessionAuthentication",
 ]
