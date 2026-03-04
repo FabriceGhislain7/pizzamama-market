@@ -4,11 +4,21 @@
 
 ## Professional E-commerce Platform for Modern Pizzerias
 
+## Live Demo
+
+### Production API Documentation
+
+[https://pizzamama-market-backend.onrender.com/api/v1/docs/](https://pizzamama-market-backend.onrender.com/api/v1/docs/)
+
+The interactive Swagger interface allows full exploration of all endpoints, authentication via JWT, and complete schema inspection.
+
+---
+
 **PizzaMama Market** is a modern and scalable e-commerce platform designed for pizzerias and food businesses that require a solid, extensible, and business-oriented system.
 
 The project is developed using **Django (backend API)** and **React (frontend)** and follows principles of **professional architecture**, **maintainability**, and **progressive growth**.
 
-This is not a simple demonstration project, but a **real foundation designed to evolve toward production environments**.
+This is not a simple demonstration project, but a real foundation designed to evolve toward production environments.
 
 ---
 
@@ -26,7 +36,7 @@ PizzaMama Market was created with the goal of:
 
 ## Architectural Vision
 
-The application adopts an **API-first** approach, with a clear separation between:
+The application adopts an API-first approach, with a clear separation between:
 
 * business logic
 * application layer
@@ -49,11 +59,11 @@ Architectural principles adopted:
 * Python 3.10+
 * Django 5.x
 * Django REST Framework
-* SQLite (development environment)
-* PostgreSQL (production target)
-* Redis (planned)
-* Celery (planned)
-* JWT (planned)
+* PostgreSQL (production)
+* SQLite (development fallback)
+* JWT Authentication (stateless)
+* Refresh token rotation and blacklist
+* Modular settings (base / dev / prod)
 
 ### Frontend (Web App)
 
@@ -64,10 +74,14 @@ Architectural principles adopted:
 
 ### Tooling & DevOps
 
-* Docker (planned)
+* Gunicorn (WSGI server)
+* Render deployment
 * Environment variable management
-* Git
-* Project ready for CI/CD pipelines
+* Git branching strategy (main / develop)
+* Project prepared for CI/CD
+* Docker (planned)
+* Redis (planned)
+* Celery (planned)
 
 ---
 
@@ -77,10 +91,17 @@ Architectural principles adopted:
 pizzamama-market/
 ├── backend/
 │   ├── manage.py
-│   ├── config/                # Django project configuration
-│   ├── apps/                  # Django apps (accounts, ...)
+│   ├── config/
+│   │   ├── settings/
+│   │   │   ├── base.py
+│   │   │   ├── dev.py
+│   │   │   └── prod.py
+│   ├── apps/
+│   │   ├── accounts/
+│   │   ├── products/
+│   │   └── orders/
 │   ├── requirements/
-│   └── db.sqlite3 (dev)
+│   └── db.sqlite3 (development only)
 │
 ├── frontend/
 │   ├── src/
@@ -88,53 +109,72 @@ pizzamama-market/
 │   └── package.json
 │
 ├── docs/
-│
-├── docker-compose.yml (planned)
 └── README.md
 ```
-
-Detailed technical documentation and architectural decisions are maintained inside the **docs** folder, separated from the main README.
 
 The virtual environment is not part of the architecture.
 
 ---
 
-## Business Domains (Backend)
+## API Overview
+
+The backend exposes a versioned API under `/api/v1/`.
+
+Available domains:
 
 ### Accounts
 
-* custom user management (Custom User Model)
-* profiles and preferences
-* delivery addresses
-* loyalty systems (planned)
+* User registration
+* JWT login
+* Token refresh
+* Logout with refresh token blacklist
+* Address management (CRUD)
 
-### Products (planned)
+### Authentication
 
-* pizza catalog
-* categories
-* ingredients
-* allergens
-* pricing and variants
+* `/api/v1/auth/login/`
+* `/api/v1/auth/refresh/`
 
-### Orders (planned)
+JWT-based stateless authentication is enforced by default.
 
-* cart
-* order management
-* status workflow
-* historical tracking and traceability
+### Products
 
-The **Payments**, **Delivery**, **Reviews**, and **Analytics** domains are planned as future extensions.
+* Categories listing
+* Pizza catalog listing
+* Detail endpoints
+* Filtering and pagination support
+
+### Orders
+
+* Order creation
+* Order listing
+* Order detail
+* Update and deletion
+* Controlled status transition endpoint
+* Domain-driven state machine
+
+### Schema
+
+* `/api/v1/schema/`
+* Fully documented OpenAPI 3.0 schema
+
+All endpoints are documented in Swagger.
 
 ---
 
-## Security and Quality
+## Security and Production Hardening
 
-* authentication via SessionAuthentication (current)
-* DRF permissions with IsAuthenticated by default
-* server-side validation
-* CSRF and CORS protection
-* separated environment configurations
-* prepared for JWT and advanced RBAC
+* JWT authentication (stateless)
+* Refresh token rotation
+* Blacklist after rotation
+* DRF `IsAuthenticated` as default permission
+* No hardcoded credentials
+* Environment-based configuration
+* DEBUG disabled in production
+* Secure cookies in production
+* HSTS enabled
+* Proxy SSL header configuration
+* Structured logging
 
 ---
 
@@ -145,7 +185,7 @@ The **Payments**, **Delivery**, **Reviews**, and **Analytics** domains are plann
 ```bash
 cd backend
 python -m venv venv
-venv\Scripts\activate          # Windows
+venv\Scripts\activate
 pip install -r requirements/base.txt
 python manage.py migrate
 python manage.py createsuperuser
@@ -155,7 +195,7 @@ python manage.py runserver
 Backend available at:
 
 ```
-http://127.0.0.1:8000/
+http://127.0.0.1:8000/api/v1/docs/
 ```
 
 ### Frontend
@@ -184,21 +224,25 @@ http://localhost:5173/
 
 ## Testing and Maintainability
 
-* structure prepared for unit testing
-* API testing
-* code organized for continuous refactoring
-* versioned migrations
+* domain logic centralized inside models
+* serializers free from business logic
+* versioned API `/api/v1/`
+* structured migrations
+* architecture ready for professional test suite expansion
 
 ---
 
-## Project Status
+## Deployment Strategy
 
-* modular settings active
-* Custom User Model implemented
-* DRF configured
-* versioned API `/api/v1/`
-* architectural foundation stabilized
-* foundation ready for progressive growth
+* Production branch: `main`
+* Staging branch: `develop`
+* Separate Render services per environment
+* Environment variables isolated per service
+* Production-grade settings active on both environments
+
+### Staging API Documentation
+
+[https://pizzamama-market-backend-develop.onrender.com/api/v1/docs/](https://pizzamama-market-backend-develop.onrender.com/api/v1/docs/)
 
 ---
 
@@ -206,38 +250,38 @@ http://localhost:5173/
 
 ### Foundations
 
-* [ ] Modular settings active (base/dev/prod)
-* [ ] Custom User Model configured
-* [ ] AUTH_USER_MODEL properly set
-* [ ] No direct use of auth.User
-* [ ] Correct BASE_DIR
+* [x] Modular settings active (base/dev/prod)
+* [x] Custom User Model configured
+* [x] AUTH_USER_MODEL properly set
+* [x] No direct use of auth.User
+* [x] Correct BASE_DIR
 
 ### API
 
-* [ ] Versioning `/api/v1/`
-* [ ] IsAuthenticated as default
-* [ ] No unintentionally exposed APIs
-* [ ] No domain logic inside serializers
+* [x] Versioning `/api/v1/`
+* [x] IsAuthenticated as default
+* [x] No unintentionally exposed APIs
+* [x] No domain logic inside serializers
 
 ### Database
 
-* [ ] Every model change → makemigrations + migrate
-* [ ] No manual database modifications
-* [ ] Consistent migrations
+* [x] Every model change → makemigrations + migrate
+* [x] No manual database modifications
+* [x] Consistent migrations
 
 ### Security
 
-* [ ] No hardcoded credentials
-* [ ] DEBUG disabled in production
-* [ ] BasicAuthentication removed
-* [ ] Proper environment separation
+* [x] No hardcoded credentials
+* [x] DEBUG disabled in production
+* [x] BasicAuthentication removed
+* [x] Proper environment separation
 
 ### Architecture
 
-* [ ] No circular imports
-* [ ] No duplicated logic
-* [ ] Business logic outside admin and serializers
-* [ ] Consistency with docs/ARCHITECTURE.md
+* [x] No circular imports
+* [x] No duplicated logic
+* [x] Business logic inside domain models
+* [x] API-first structure
 
 ---
 
