@@ -1,11 +1,13 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from apps.products.models import Pizza, PizzaSize, Ingredient
 from apps.accounts.models import Address
 from apps.core.models import TimeStampedModel
 import uuid
+
 
 # CART
 class Cart(TimeStampedModel):
@@ -81,6 +83,7 @@ class CartItem(TimeStampedModel):
 
 # ORDER
 class Order(TimeStampedModel):
+
     STATUS_CHOICES = [
         ("pending", "In Attesa"),
         ("confirmed", "Confermato"),
@@ -97,6 +100,14 @@ class Order(TimeStampedModel):
         ("pickup", "Ritiro"),
         ("dine_in", "In sede"),
     ]
+
+    VALID_TRANSITIONS = {
+        "pending": ["confirmed", "cancelled"],
+        "confirmed": ["preparing", "cancelled"],
+        "preparing": ["ready"],
+        "ready": ["out_for_delivery"],
+        "out_for_delivery": ["delivered"],
+    }
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
@@ -140,9 +151,41 @@ class Order(TimeStampedModel):
         db_table = "orders_order"
         ordering = ["-created_at"]
 
+    def clean(self):
+        calculated_total = (
+            self.subtotal
+            + self.delivery_fee
+            + self.tax_amount
+            - self.discount_amount
+        )
+
+        if calculated_total != self.total_amount:
+            raise ValidationError("Total amount is inconsistent.")
+
+    def change_status(self, new_status):
+        allowed = self.VALID_TRANSITIONS.get(self.status, [])
+
+        if new_status not in allowed:
+            raise ValueError(
+                f"Invalid status transition from {self.status} to {new_status}"
+            )
+
+        self.status = new_status
+
+        if new_status == "confirmed":
+            self.confirmed_at = timezone.now()
+
+        if new_status == "delivered":
+            self.delivered_at = timezone.now()
+
+        self.save()
+
     def save(self, *args, **kwargs):
         if not self.order_number:
             self.order_number = f"PME-{uuid.uuid4().hex[:8].upper()}"
+
+        self.full_clean()
+
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -188,6 +231,7 @@ class OrderItem(TimeStampedModel):
 
 # PAYMENT
 class Payment(TimeStampedModel):
+
     STATUS_CHOICES = [
         ("pending", "In attesa"),
         ("processing", "In elaborazione"),
@@ -224,6 +268,7 @@ class Payment(TimeStampedModel):
 
 # DELIVERY INFO
 class DeliveryInfo(TimeStampedModel):
+
     STATUS_CHOICES = [
         ("assigned", "Assegnato"),
         ("in_transit", "In transito"),

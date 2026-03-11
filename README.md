@@ -228,7 +228,8 @@ http://localhost:5173/
 * serializers free from business logic
 * versioned API `/api/v1/`
 * structured migrations
-* architecture ready for professional test suite expansion
+* professional pytest test suite already active
+* regression coverage on authentication and order workflow
 
 ---
 

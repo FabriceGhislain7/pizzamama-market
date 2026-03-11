@@ -1,37 +1,37 @@
-# 🍕 PizzaMama Market – Architecture Reference (Aligned Version)
+# PizzaMama Market - Architecture Reference
 
 ---
 
 # Document Purpose
 
-This document defines the **official and binding architecture** of the PizzaMama Market project.
+This document defines the official architecture of the PizzaMama Market project up to the current implementation baseline.
 
 It exists to:
 
-* maintain long-term consistency
+* keep the project aligned with the real codebase
 * prevent architectural drift
 * support controlled growth
 * reduce technical debt
-* guarantee safe evolution
+* provide a stable reference for future steps
 
-The rules defined here are **not optional**.
+The content of this file must reflect the real state of the repository.
 
 ---
 
 # Architectural Vision
 
-PizzaMama Market is an **API-first** e-commerce platform designed for:
+PizzaMama Market is an API-first e-commerce platform designed for:
 
 * progressive scalability
-* domain/framework separation
-* backend reuse (web, mobile, integrations)
-* security by design
-* evolution without invasive rewrites
+* domain and framework separation
+* backend reuse across web, mobile, and integrations
+* security by default
+* incremental evolution without invasive rewrites
 
 Django is used as:
 
 > API provider and application orchestrator
-> Not as a traditional MVC monolith
+> not as a traditional template-driven monolith
 
 ---
 
@@ -39,60 +39,47 @@ Django is used as:
 
 1. Clear separation of responsibilities
 2. Modular domain structure
-3. Zero Trust Security
-4. API as the only official interface
+3. API as the official system interface
+4. Default-deny security model
 5. Incremental evolution
 6. No premature over-engineering
 
 ---
 
-# Security Philosophy (Zero Trust)
+# Security Model
 
 Applied principles:
 
-* Default deny
-* Explicit permissions
-* No implicit trust between layers
-* No unnecessary exposure
-* Separated environment configurations
-* Prepared for JWT (JSON Web Token)
+* default deny
+* explicit permissions
+* no unnecessary public exposure
+* separated environment configurations
+* stateless authentication for the API
 
 Current authentication status:
 
-* SessionAuthentication active
-* DEFAULT_PERMISSION_CLASSES = IsAuthenticated
-* BasicAuthentication removed
-* JWT planned for future evolution
-
----
-
-# Official Naming Strategy
-
-| Element              | Convention         |
-| -------------------- | ------------------ |
-| Public URL           | Italian kebab-case |
-| Domain variables     | Italian snake_case |
-| Domain classes       | Italian PascalCase |
-| Django/DRF framework | English            |
-| Authentication model | `User` (English)   |
-
-Clear separation between domain and framework.
+* `IsAuthenticated` is the global DRF default permission
+* JWT is the default authentication mechanism
+* refresh token rotation is enabled
+* refresh token blacklist is enabled
+* `SessionAuthentication` is added only in development for local convenience
+* `BasicAuthentication` is not used
 
 ---
 
 # High-Level Architecture
 
-```
+```text
 Client (Web / Mobile / External Services)
-                ↓
+                |
             REST API v1
-                ↓
+                |
        Application Layer (Django)
-                ↓
+                |
          Business Logic Layer
-                ↓
+                |
           Persistence Layer (ORM)
-                ↓
+                |
               Database
 ```
 
@@ -100,36 +87,42 @@ Client (Web / Mobile / External Services)
 
 # Layer Separation
 
-## 1️⃣ Presentation Layer (Frontend)
+## Presentation Layer
 
-* React (target)
-* Client state
-* API calls
-* No business logic
-* No direct database access
+Responsibilities:
+
+* frontend rendering
+* client state
+* API consumption
+
+Rules:
+
+* no business logic
+* no direct database access
+* no dependency on Django templates
 
 ---
 
-## 2️⃣ Application Layer (Django)
+## Application Layer
 
 Location:
 
-```
+```text
 backend/config/
-backend/apps/
+backend/apps/*/api/
 ```
 
 Responsibilities:
 
-* Routing
-* Authentication
-* Permissions
-* Serialization
-* Input validation
+* routing
+* authentication
+* permissions
+* serialization
+* request validation
 * API versioning
-* Admin interface
+* schema generation
 
-⚠ Complex business logic is forbidden inside:
+Complex business logic is not allowed inside:
 
 * serializers
 * admin
@@ -137,102 +130,116 @@ Responsibilities:
 
 ---
 
-## 3️⃣ Business Logic Layer
+## Business Logic Layer
 
-Lives inside the apps.
+Current implementation:
 
-Can be organized into:
+* domain rules live primarily inside models
+* the `Order` model contains workflow and financial consistency rules
 
-```
-services.py
-selectors.py
-```
+Possible future evolution:
 
-Principles:
+* `services.py`
+* `selectors.py`
 
-* No logic inside serializers
-* No logic inside admin
-* No complex logic inside signals
-* No duplication
+This is a future refinement, not a current requirement for already simple domain rules.
 
 ---
 
-## 4️⃣ Persistence Layer
+## Persistence Layer
 
 Technologies:
 
 * Django ORM
-* SQLite (development)
-* PostgreSQL (production target)
+* SQLite in development
+* PostgreSQL in production
 
 Rules:
 
-* Migrations mandatory
-* No manual database modifications
-* No undocumented raw queries
+* migrations are mandatory
+* no manual database modifications
+* no undocumented raw queries
 
 ---
 
-# Official Current Structure (Real State)
+# Current Repository Structure
 
-```
+```text
 backend/
-├── manage.py
-├── db.sqlite3
-│
-├── config/
-│   ├── asgi.py
-│   ├── wsgi.py
-│   ├── urls.py
-│   └── settings/
-│       ├── base.py
-│       ├── dev.py
-│       └── prod.py
-│
-├── apps/
-│   ├── core/
-│   │   └── models.py      ← TimeStampedModel (abstract)
-│   │
-│   └── accounts/
-│       ├── models.py      ← Custom User
-│       ├── admin.py
-│       ├── apps.py
-│       └── migrations/
-│
-├── requirements/
-└── venv/
+|-- manage.py
+|-- db.sqlite3
+|-- pytest.ini
+|
+|-- config/
+|   |-- asgi.py
+|   |-- wsgi.py
+|   |-- urls.py
+|   |-- api_urls.py
+|   `-- settings/
+|       |-- base.py
+|       |-- dev.py
+|       `-- prod.py
+|
+|-- apps/
+|   |-- core/
+|   |   `-- models.py
+|   |
+|   |-- accounts/
+|   |   |-- models.py
+|   |   |-- admin.py
+|   |   |-- signals.py
+|   |   |-- api/
+|   |   |-- migrations/
+|   |   `-- tests/
+|   |
+|   |-- products/
+|   |   |-- models.py
+|   |   |-- admin.py
+|   |   |-- api/
+|   |   |-- migrations/
+|   |   `-- tests/
+|   |
+|   `-- orders/
+|       |-- models.py
+|       |-- admin.py
+|       |-- api/
+|       |-- migrations/
+|       `-- tests/
+|
+`-- requirements/
 ```
 
----
-
-# Core Module (Domain Infrastructure)
-
-`apps/core/` contains reusable components.
-
-Example:
-
-* TimeStampedModel (abstract)
-
-It is not a business domain.
-It is not registered in INSTALLED_APPS.
+The virtual environment is not part of the logical architecture.
 
 ---
 
-# Custom User Model (Mandatory Rule)
+# Core Infrastructure
 
-The project uses a Custom User Model:
+`apps/core/` contains reusable infrastructure components.
+
+Current example:
+
+* `TimeStampedModel` as an abstract base model
+
+It is shared infrastructure, not a business domain.
+
+---
+
+# Custom User Model
+
+The project uses a custom user model:
 
 ```python
 class User(AbstractUser, TimeStampedModel)
 ```
 
-It is mandatory:
+Mandatory setting:
 
 ```python
 AUTH_USER_MODEL = "accounts.User"
 ```
 
-It is forbidden:
+Forbidden:
 
 ```python
 from django.contrib.auth.models import User
@@ -240,10 +247,10 @@ from django.contrib.auth.models import User
 
 Reasons:
 
-* future extensibility
-* JWT compatibility
-* loyalty management
-* RBAC flexibility
+* extensibility
+* profile and loyalty evolution
+* cleaner domain ownership
+* safer long-term authentication strategy
 
 ---
 
@@ -251,156 +258,223 @@ Reasons:
 
 Official format:
 
-```
+```text
 /api/v1/accounts/
 /api/v1/products/
 /api/v1/orders/
 ```
 
+Additional platform endpoints:
+
+```text
+/api/v1/auth/login/
+/api/v1/auth/refresh/
+/api/v1/schema/
+/api/v1/docs/
+```
+
 Rules:
 
-* Versioning mandatory
-* No unversioned APIs
-* Default permission: IsAuthenticated
-* Public endpoints explicitly declared
+* versioning is mandatory
+* no unversioned APIs
+* global default permission is `IsAuthenticated`
+* public endpoints must be explicitly declared
 
 ---
 
-# Fundamental Rules
+# Implemented Domains
 
-## Rule 1 — Single Source of Truth
+## Accounts
 
-Every business concept must have only one definition.
+Implemented:
+
+* custom user model
+* registration endpoint
+* JWT-compatible authentication flow
+* logout with refresh token blacklist
+* address management
+* profile model
+
+---
+
+## Products
+
+Implemented:
+
+* catalog domain modeling
+* API exposure through versioned endpoints
+* filtering and list support
+
+---
+
+## Orders
+
+Implemented:
+
+* cart and cart items
+* order and order items
+* payment and delivery information models
+* controlled order status workflow
+* financial consistency validation
+* dedicated API endpoint for status transitions
+
+The `Order` model contains domain logic such as:
+
+* `VALID_TRANSITIONS`
+* `change_status()`
+* `clean()`
+* `save()` with `full_clean()`
+
+---
+
+# Testing State
+
+The project includes an active pytest-based test suite.
+
+Current test scope:
+
+* JWT login
+* order status transition workflow
+* invalid workflow protection
+* order financial validation
+* custom change-status endpoint
+
+Testing stack:
+
+* `pytest`
+* `pytest-django`
+* `factory-boy`
+* `coverage`
+
+---
+
+# Settings Strategy
+
+The project uses modular settings:
+
+* `base.py` for shared configuration
+* `dev.py` for development
+* `prod.py` for production
+
+Rules:
+
+* no monolithic settings file
+* no hardcoded production credentials
+* fail-fast on critical missing production variables
+* environment separation is mandatory
+
+---
+
+# Production Foundation
+
+Current production-oriented elements:
+
+* `SECRET_KEY` from environment variables
+* `ALLOWED_HOSTS` from environment variables
+* `DEBUG = False` in production
+* HSTS enabled
+* secure cookies enabled
+* SSL redirect enabled
+* proxy SSL header configured
+* console logging configured
+* Gunicorn included in dependencies
+
+---
+
+# Architectural Rules
+
+## Rule 1 - Single Source of Truth
+
+Every business rule must have one authoritative implementation.
 
 Forbidden:
 
-* duplicating logic
-* duplicating models
-* inconsistent naming
+* duplicated logic
+* duplicated domain concepts
+* contradictory documentation
 
 ---
 
-## Rule 2 — Directional Dependencies
+## Rule 2 - Directional Dependencies
 
 Correct flow:
 
-```
+```text
 API / Admin
-      ↓
+      |
+   Models
+      |
+ Database
+```
+
+Possible future service layer:
+
+```text
+API / Admin
+      |
   Services
-      ↓
-    Models
-      ↓
-   Database
+      |
+   Models
+      |
+ Database
 ```
 
 Forbidden:
 
 * circular imports
-* logic inside serializers
-* logic inside admin
+* business logic inside serializers
+* business logic inside admin
 
 ---
 
-## Rule 3 — API First
+## Rule 3 - API First
 
-Every feature must be exposed via API.
+Every external feature must be exposed through the API layer.
 
-Frontend:
+Frontend rules:
 
-* does not access the database
-* does not contain domain rules
-* does not depend on Django templates
-
----
-
-# Planned Domains
-
-## Accounts
-
-* users
-* profiles
-* addresses
-* authentication
-* roles and permissions
-* loyalty
-
-## Products
-
-* catalog
-* categories
-* variants
-* pricing
-
-## Orders
-
-* cart
-* orders
-* status workflow
-* history
+* no direct data access
+* no business rules duplicated in the UI
+* no dependence on server-rendered Django pages
 
 ---
 
-# Target Evolution Structure (Not Yet Implemented)
+# Current Baseline
 
-```
-apps/
-├── accounts/
-│   ├── models.py
-│   ├── services.py
-│   ├── api/
-│   └── urls.py
-│
-├── products/
-├── orders/
-├── payments/
-```
+The repository is aligned up to this baseline:
 
-This represents the future direction, not the current state.
+* modular settings
+* DRF with global authenticated default
+* JWT stateless authentication
+* refresh token blacklist and rotation
+* production-oriented settings split
+* domain-driven `Order` workflow
+* pytest-based regression protection
+
+This corresponds to the project state up to Step 15.
 
 ---
 
-# Migrations
+# Next Direction
 
-Rules:
+The next logical step is not more domain breadth.
 
-* Every model change → makemigrations + migrate
-* Versioned migrations
-* No manual database manipulation
+It is operational maturity:
 
----
+* Dockerization
+* environment reproducibility
+* CI/CD
+* stronger automated quality gates
 
-# Database Strategy
-
-Environments:
-
-* Dev → SQLite
-* Prod → PostgreSQL
-
-Future:
-
-* Redis
-* Celery
-* Docker
-
----
-
-# Future Extensions
-
-* JWT Authentication
-* Advanced RBAC
-* Payments
-* Delivery
-* Reviews
-* Analytics
-* Observability
+These belong after the current baseline, not inside it.
 
 ---
 
 # Final Note
 
-If a modification violates this document:
+If this document diverges from the codebase:
 
-The modification must be rejected.
+* the document must be updated
+* or the code must be corrected
 
-This file represents the **official architectural truth** of the PizzaMama Market project.
+Documentation is only valid when it matches the repository.

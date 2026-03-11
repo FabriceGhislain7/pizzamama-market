@@ -1,40 +1,33 @@
-# 🍕 PizzaMama Market – Internal Technical Documentation (Aligned)
+# PizzaMama Market - Internal Technical Documentation
 
 ---
 
 # Purpose of This Document
 
-This document represents the **internal operational technical guide** of the PizzaMama Market project.
+This document is the internal technical guide for the PizzaMama Market repository.
 
 It is intended for:
 
 * backend developers working on the project
-* maintaining architectural consistency
-* guiding controlled technical evolution
+* maintaining technical consistency
+* guiding controlled evolution
 * preventing technical debt
-* facilitating onboarding
+* supporting onboarding
 
-The main `README.md` remains product-oriented.
-This document is focused on real technical implementation.
+The public `README.md` remains product-oriented.
+This document describes the real technical implementation baseline.
 
 ---
 
 # Technical Vision
 
-PizzaMama Market is an **API-first** platform built with:
+PizzaMama Market is an API-first platform built with:
 
 * Python
 * Django
 * Django REST Framework
-* SQLite (development)
-* PostgreSQL (production target)
-
-Clear separation between:
-
-* Application Layer (Django)
-* Business Logic Layer
-* Persistence Layer
-* Presentation Layer (independent frontend)
+* SQLite as local fallback
+* PostgreSQL in production
 
 The backend is designed to be:
 
@@ -47,17 +40,17 @@ The backend is designed to be:
 
 # Conceptual Architecture
 
-```id="arch001"
+```text
 Client (Web / Mobile / External Services)
-                ↓
+                |
             REST API (v1)
-                ↓
+                |
         Django Application Layer
-                ↓
+                |
          Business Logic Layer
-                ↓
+                |
            Django ORM
-                ↓
+                |
              Database
 ```
 
@@ -68,58 +61,61 @@ Client (Web / Mobile / External Services)
 * API-first
 * separation of responsibilities
 * modular domain structure
-* zero trust mindset
+* default-deny security mindset
 * incremental evolution
 * avoid premature over-engineering
 * separated environment configurations
 
 ---
 
-# Backend Structure (Current Real State)
+# Backend Structure
 
-```id="struct001"
+```text
 backend/
-├── manage.py
-├── db.sqlite3
-│
-├── config/
-│   ├── asgi.py
-│   ├── wsgi.py
-│   ├── urls.py
-│   ├── api_urls.py
-│   └── settings/
-│       ├── base.py
-│       ├── dev.py
-│       └── prod.py
-│
-├── apps/
-│   ├── core/
-│   │   └── models.py              # TimeStampedModel (abstract)
-│   │
-│   ├── accounts/
-│   │   ├── models.py              # Custom User + Profile + Address
-│   │   ├── admin.py
-│   │   ├── api/
-│   │   └── migrations/
-│   │
-│   ├── products/
-│   │   ├── models.py              # Category, Ingredient, Pizza, etc.
-│   │   ├── admin.py
-│   │   ├── api/
-│   │   └── migrations/
-│   │
-│   └── orders/
-│       ├── models.py              # Cart, Order, OrderItem, Payment
-│       ├── admin.py
-│       ├── api/
-│       └── migrations/
-│
-├── requirements/
-└── venv/
+|-- manage.py
+|-- db.sqlite3
+|-- pytest.ini
+|
+|-- config/
+|   |-- asgi.py
+|   |-- wsgi.py
+|   |-- urls.py
+|   |-- api_urls.py
+|   `-- settings/
+|       |-- base.py
+|       |-- dev.py
+|       `-- prod.py
+|
+|-- apps/
+|   |-- core/
+|   |   `-- models.py
+|   |
+|   |-- accounts/
+|   |   |-- models.py
+|   |   |-- admin.py
+|   |   |-- signals.py
+|   |   |-- api/
+|   |   |-- migrations/
+|   |   `-- tests/
+|   |
+|   |-- products/
+|   |   |-- models.py
+|   |   |-- admin.py
+|   |   |-- api/
+|   |   |-- migrations/
+|   |   `-- tests/
+|   |
+|   `-- orders/
+|       |-- models.py
+|       |-- admin.py
+|       |-- api/
+|       |-- migrations/
+|       `-- tests/
+|
+`-- requirements/
 ```
 
-Note:
-The virtual environment is not part of the logical architecture.
+The virtual environment is not part of the logical project architecture.
 
 ---
 
@@ -127,22 +123,23 @@ The virtual environment is not part of the logical architecture.
 
 The project uses modular settings:
 
-* `base.py` → shared configuration
-* `dev.py` → development
-* `prod.py` → production
+* `base.py` for shared configuration
+* `dev.py` for development
+* `prod.py` for production
 
 Rules:
 
-* No monolithic settings file
-* No hardcoded production credentials
-* Mandatory environment separation
-* Prepared for Docker / CI/CD
+* no monolithic settings file
+* no hardcoded production credentials
+* fail-fast on critical production variables
+* mandatory environment separation
+* prepared for Docker and CI/CD, but not yet containerized in-repo
 
 ---
 
 # Django REST Framework
 
-Current configuration:
+Current DRF baseline:
 
 ```python
 DEFAULT_PERMISSION_CLASSES = [
@@ -150,124 +147,135 @@ DEFAULT_PERMISSION_CLASSES = [
 ]
 
 DEFAULT_AUTHENTICATION_CLASSES = [
-    SessionAuthentication,
-    TokenAuthentication
+    JWTAuthentication
 ]
 ```
 
+Development adds:
+
+```python
+SessionAuthentication
+```
+
+only in `dev.py` for local convenience.
+
 Current security status:
 
-* All APIs protected by default
-* BasicAuthentication removed
-* Session and Token authentication active
-* JWT planned as future evolution
+* all APIs are protected by default
+* JWT is active by default
+* refresh token rotation is active
+* refresh token blacklist is active
+* `BasicAuthentication` is not used
 
 ---
 
-# Naming Strategy
+# Authentication and Accounts
 
-Official rules:
+Implemented:
 
-| Element              | Convention         |
-| -------------------- | ------------------ |
-| Public URL           | Italian kebab-case |
-| Domain variables     | Italian snake_case |
-| Domain classes       | Italian PascalCase |
-| Django/DRF framework | English            |
+* custom `User` model
+* registration endpoint
+* JWT login endpoint
+* refresh endpoint
+* logout with refresh token blacklist
+* address CRUD
+* profile model
 
-Clear separation between domain and framework.
+Relevant endpoint groups:
 
----
-
-# `core` Module
-
-The `apps/core/` folder contains shared infrastructure components.
-
-Currently includes:
-
-* `TimeStampedModel` (abstract)
-
-It does not represent a business domain.
-It must not contain concrete models.
-
----
-
-# Custom User Model
-
-The project uses a Custom User Model from the beginning.
-
-Implementation:
-
-```python
-class User(AbstractUser, TimeStampedModel)
+```text
+/api/v1/auth/login/
+/api/v1/auth/refresh/
+/api/v1/accounts/register/
+/api/v1/accounts/logout/
+/api/v1/accounts/addresses/
 ```
 
-Mandatory configuration:
+---
 
-```python
-AUTH_USER_MODEL = "accounts.User"
-```
+# Products Domain
 
-Rules:
+The products app models the catalog domain and exposes versioned API endpoints.
 
-* Never import `User` from `django.contrib.auth.models`
-* Always use `settings.AUTH_USER_MODEL`
-* No direct relation to `auth.User`
+Current scope includes:
+
+* categories
+* ingredients
+* pizzas
+* pizza size support
+* list and detail API exposure
+* filtering support
 
 ---
 
-# Role of the `apps/` Folder
+# Orders Domain
 
-Contains all application code.
+The orders app already contains business-critical domain behavior.
 
-Each app includes:
+Current implemented scope:
 
-* models
-* admin
-* domain logic (future `services.py`)
-* API layer (`api/`)
-* migrations
+* cart
+* cart items
+* order
+* order items
+* payment
+* delivery information
+* order workflow endpoint
 
-Fundamental rule:
+Important domain rules currently live in the `Order` model:
 
-> No Django model outside `apps/`.
+* controlled `VALID_TRANSITIONS`
+* `change_status()` for workflow progression
+* `clean()` for amount consistency
+* `save()` enforcing `full_clean()`
 
----
-
-# Domain Logic
-
-Currently implemented inside models with controlled scope.
-
-Future direction:
-
-* `services.py` per domain
-* optional read/write separation
-* no complex logic inside serializers or admin
+This means workflow logic is protected at model level, not only at API level.
 
 ---
 
 # API Strategy
 
-Official format:
+Official API namespace:
 
-```id="api001"
+```text
+/api/v1/
+```
+
+Primary domain groups:
+
+```text
 /api/v1/accounts/
 /api/v1/products/
 /api/v1/orders/
 ```
 
-Rules:
-
-* Versioning mandatory
-* No unversioned APIs
-* Default permission: IsAuthenticated
-* Public endpoints explicitly declared
-
-API routing is centralized in:
+Platform endpoints:
 
 ```text
-backend/config/api_urls.py
+/api/v1/schema/
+/api/v1/docs/
+/api/v1/auth/login/
+/api/v1/auth/refresh/
 ```
+
+Rules:
+
+* versioning is mandatory
+* no unversioned APIs
+* public endpoints must be explicit
+* business logic must not live in serializers
+
+---
+
+# Core Infrastructure
+
+`apps/core/` contains reusable shared infrastructure.
+
+Current example:
+
+* `TimeStampedModel`
+
+It is not a business domain and should remain thin.
 
 ---
 
@@ -275,14 +283,14 @@ backend/config/api_urls.py
 
 Environments:
 
-* Dev → SQLite
-* Prod → PostgreSQL
+* development uses SQLite fallback
+* production uses PostgreSQL
 
 Rules:
 
-* Every model change → mandatory migration
-* No manual database modification
-* Standard workflow:
+* every model change requires migrations
+* no manual database manipulation
+* standard workflow remains:
 
 ```bash
 python manage.py makemigrations
@@ -291,96 +299,100 @@ python manage.py migrate
 
 ---
 
-# Security
+# Production Foundation
 
-Current principles:
+The project already includes a production-oriented baseline:
 
-* Default deny
-* Global IsAuthenticated
-* Server-side validation
-* SessionAuthentication active
-* TokenAuthentication active
-* Prepared for JWT
-* Separated environment settings
+* environment-based `SECRET_KEY`
+* environment-based `ALLOWED_HOSTS`
+* `DEBUG=False` in production
+* HSTS enabled
+* secure cookies enabled
+* SSL redirect enabled
+* proxy SSL header configured
+* logging configured
+* Gunicorn included
 
-Future:
-
-* JWT
-* Advanced RBAC
-* Structured logging
-* Audit trail
+This corresponds to the hardening work completed before Dockerization.
 
 ---
 
 # Testing Strategy
 
-Structure prepared for:
+Current testing stack:
 
-* model tests
-* service tests
-* API tests
-* integration tests
+* `pytest`
+* `pytest-django`
+* `factory-boy`
+* `coverage`
 
-Objective:
+Current implemented coverage areas:
 
-* controlled regressions
-* safe refactors
-* increasing reliability
+* JWT login
+* order workflow transitions
+* invalid transition protection
+* order amount validation
+* custom change-status endpoint
+
+Current goal:
+
+* block regressions on critical flows
+* allow safer refactors
+* expand coverage incrementally
 
 ---
 
 # Development Guidelines
 
 * keep apps focused and modular
-* avoid logic inside serializers
-* avoid logic inside admin
+* avoid business logic inside serializers
+* avoid business logic inside admin
 * avoid circular imports
-* perform incremental refactors
-* every modification must have architectural justification
+* prefer incremental refactors
+* update documentation when the baseline changes
 
 ---
 
 # Current Project State
 
-Foundation and core domains completed:
+The repository is aligned up to Step 15:
 
 * modular settings
-* DRF configured
-* Token authentication active
-* Custom User implemented
-* Products domain modeled
-* Orders domain modeled
-* Clean migrations
-* Working admin
-* Versioned API `/api/v1/`
-* Centralized API routing
-* Default deny security model
+* JWT stateless authentication
+* refresh token blacklist and rotation
+* custom user model
+* products domain modeled
+* orders domain modeled
+* order workflow formalized
+* production hardening baseline
+* pytest suite active
+* versioned API `/api/v1/`
+* centralized API routing
+* default-deny security model
 
 ---
 
-# Evolutionary Objective
+# Next Logical Evolutions
 
-Next logical evolutions:
+The next steps after the current baseline are:
 
-* Service layer formalization
-* Production hardening
-* JWT authentication
-* Payments domain expansion
-* Delivery integration
-* Reviews
-* Observability
+* Dockerization
+* local environment reproducibility
+* CI/CD
+* broader automated coverage
+* observability
 
-The system is designed to grow without invasive rewrites.
+These are not yet completed in the repository.
 
 ---
 
 # Final Note
 
-This document must always reflect the real state of the project.
+This document must always match the real state of the project.
 
-If code and document diverge:
+If code and documentation diverge:
 
-* either the document must be updated
-* or the code must be corrected
+* update the document
+* or correct the code
 
 Consistency is mandatory.
