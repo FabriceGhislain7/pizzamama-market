@@ -1,22 +1,17 @@
-
 import uuid
 from django.contrib.auth.models import AbstractUser
 from apps.core.models import TimeStampedModel
 from django.db import models
 from django.conf import settings
 
+
 # Create your models here.
 class User(AbstractUser, TimeStampedModel):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False
-    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     phone = models.CharField(max_length=20, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     marketing_consent = models.BooleanField(default=False)
-
 
     def __str__(self):
         return self.username
@@ -36,8 +31,12 @@ class Address(TimeStampedModel):
     province = models.CharField(max_length=100)
     country = models.CharField(max_length=100, default="Italia")
 
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    latitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True
+    )
+    longitude = models.DecimalField(
+        max_digits=9, decimal_places=6, null=True, blank=True
+    )
 
     is_default = models.BooleanField(default=False)
 

@@ -22,6 +22,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect
+from apps.core.views import health_check
 
 
 # Root redirect verso Swagger Docs
@@ -31,14 +32,11 @@ def homepage(request):
 
 urlpatterns = [
     path("", homepage),  # ROOT
-
+    path("health/", health_check, name="health-check"),
     path("admin/", admin.site.urls),
     path("api/v1/", include("config.api_urls")),
 ]
 
 
 if settings.DEBUG:
-    urlpatterns += static(
-        settings.MEDIA_URL,
-        document_root=settings.MEDIA_ROOT
-    )
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

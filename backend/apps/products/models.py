@@ -46,6 +46,7 @@ class Category(TimeStampedModel):
     def __str__(self):
         return self.name
 
+
 # ALLERGEN
 class Allergen(TimeStampedModel):
     name = models.CharField(max_length=50, unique=True)
@@ -58,6 +59,7 @@ class Allergen(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
 
 # INGREDIENT
 class Ingredient(TimeStampedModel):
@@ -96,13 +98,12 @@ class Ingredient(TimeStampedModel):
     def __str__(self):
         return self.name
 
+
 # PIZZA SIZE
 class PizzaSize(TimeStampedModel):
     name = models.CharField(max_length=20, unique=True)
     diameter_cm = models.PositiveIntegerField()
-    price_multiplier = models.DecimalField(
-        max_digits=4, decimal_places=2, default=1
-    )
+    price_multiplier = models.DecimalField(max_digits=4, decimal_places=2, default=1)
 
     is_active = models.BooleanField(default=True)
 
@@ -112,6 +113,7 @@ class PizzaSize(TimeStampedModel):
 
     def __str__(self):
         return f"{self.name} ({self.diameter_cm}cm)"
+
 
 # PIZZA
 class Pizza(TimeStampedModel):
@@ -142,6 +144,11 @@ class Pizza(TimeStampedModel):
     class Meta:
         db_table = "products_pizza"
         ordering = ["-is_featured", "name"]
+        indexes = [
+            models.Index(fields=["slug"]),
+            models.Index(fields=["is_featured"]),
+            models.Index(fields=["created_at"]),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -159,6 +166,7 @@ class Pizza(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
 
 # PIZZA INGREDIENT (THROUGH MODEL)
 class PizzaIngredient(TimeStampedModel):

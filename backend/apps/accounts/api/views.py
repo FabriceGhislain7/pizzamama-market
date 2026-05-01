@@ -7,10 +7,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.accounts.models import Address
 from .serializers import AddressSerializer, RegisterSerializer
 
-
 # -------------------------------------------------------------------
 # Address ViewSet
 # -------------------------------------------------------------------
+
 
 class AddressViewSet(viewsets.ModelViewSet):
     serializer_class = AddressSerializer
@@ -38,6 +38,7 @@ class AddressViewSet(viewsets.ModelViewSet):
 # Register View
 # -------------------------------------------------------------------
 
+
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
@@ -46,6 +47,7 @@ class RegisterView(generics.CreateAPIView):
 # -------------------------------------------------------------------
 # Logout View
 # -------------------------------------------------------------------
+
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]

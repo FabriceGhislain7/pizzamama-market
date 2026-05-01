@@ -150,13 +150,15 @@ class Order(TimeStampedModel):
     class Meta:
         db_table = "orders_order"
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user"]),
+            models.Index(fields=["status"]),
+            models.Index(fields=["created_at"]),
+        ]
 
     def clean(self):
         calculated_total = (
-            self.subtotal
-            + self.delivery_fee
-            + self.tax_amount
-            - self.discount_amount
+            self.subtotal + self.delivery_fee + self.tax_amount - self.discount_amount
         )
 
         if calculated_total != self.total_amount:

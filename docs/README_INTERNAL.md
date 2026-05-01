@@ -372,6 +372,164 @@ The repository is aligned up to Step 15:
 
 ---
 
+# Project Evolution Checklist
+
+This checklist tracks the backend evolution against:
+
+```text
+C:\Users\ghisl\repositories\learning-lab\Develop_Documentation\Django\README_STEPS_SENIOR
+```
+
+Before continuing, read the guide in this order:
+
+```text
+00-ROADMAP-E-ISTRUZIONI/00-readme-roadmap.md
+00-ROADMAP-E-ISTRUZIONI/01-standard-documentazione-step.md
+00-ROADMAP-E-ISTRUZIONI/02-checklist-qualita-documentazione.md
+00-ROADMAP-E-ISTRUZIONI/03-debug-flusso-funzionale-frontend-api-backend-database.md
+FASE-04-Industrializzazione-Produzione-e-Deployment/
+```
+
+This preserves the learning path and avoids continuing from assumptions.
+
+## Phase 01 - Fondamenta Progetto
+
+* [x] Step 1 - Monorepo API-first structure created
+* [x] Step 2 - Django backend environment installed
+* [x] Step 3 - Django project created with `config/` architecture
+* [x] Step 4 - Backend installation tested
+* [x] Step 5 - Database setup and modular settings completed
+
+## Phase 02 - Backend API e Dominio
+
+* [x] Step 6 - Django REST Framework foundation configured
+* [x] Step 7 - Accounts app and custom user model configured
+* [x] Step 8 - Profile, address, media and account domain modeled
+* [x] Step 9 - Products catalog domain modeled
+* [x] Step 10 - Orders domain modeled
+* [x] Step 11 - Enterprise API layer implemented
+
+## Phase 03 - Autenticazione, Sicurezza Base e Test
+
+* [x] Step 12 - JWT authentication flow implemented
+* [x] Step 13 - Production hardening foundation implemented
+* [x] Step 14 - Order workflow and state transitions implemented
+* [x] Step 15 - Professional pytest suite implemented and passing
+
+## Phase 04 - Industrializzazione, Produzione e Deployment
+
+* [x] Step 16 - Dockerization with backend and PostgreSQL implemented
+  Verification pending: Docker CLI is not available in the current shell.
+* [x] Step 17 - CI/CD pipeline implemented
+  Verification pending: workflow must run on GitHub after push.
+* [x] Step 18 - Monitoring and observability implemented
+* [x] Step 19 - Performance and scalability implemented
+* [x] Step 20 - Security hardening and abuse protection implemented
+
+Current verified checkpoint:
+
+```text
+Steps 1-15 completed and verified.
+Steps 16-20 implemented.
+Local backend checks pass.
+Docker build/up verification is pending because Docker is not available in the current shell.
+Remote CI/CD verification is pending until the workflow runs on GitHub.
+```
+
+Verification commands:
+
+```powershell
+cd backend
+.\venv\Scripts\python.exe manage.py check
+.\venv\Scripts\python.exe manage.py makemigrations --check --dry-run
+.\venv\Scripts\python.exe -m pytest
+.\venv\Scripts\python.exe -m black --check apps config manage.py
+.\venv\Scripts\python.exe -m flake8 apps config manage.py --jobs=1
+```
+
+Expected verification result:
+
+```text
+System check identified no issues.
+No changes detected.
+7 passed.
+Black check passes.
+Flake8 passes.
+```
+
+Docker verification, when Docker is installed:
+
+```powershell
+cd backend
+docker compose build
+docker compose up
+```
+
+Expected Docker endpoints:
+
+```text
+http://localhost:8000/admin/
+http://localhost:8000/api/v1/docs/
+```
+
+CI/CD verification, when pushed to GitHub:
+
+```text
+.github/workflows/ci.yml
+```
+
+Required repository secrets for Docker image publishing:
+
+```text
+DOCKER_USERNAME
+DOCKER_PASSWORD
+```
+
+## Resume Notes
+
+When work resumes, do not restart from Step 1.
+
+Resume by checking:
+
+```powershell
+git status --short
+cd backend
+.\venv\Scripts\python.exe manage.py check
+.\venv\Scripts\python.exe manage.py makemigrations --check --dry-run
+.\venv\Scripts\python.exe -m pytest
+```
+
+Then continue from the first unresolved external verification:
+
+```powershell
+cd backend
+docker compose build
+docker compose up
+```
+
+If Docker works, verify:
+
+```text
+http://localhost:8000/health/
+http://localhost:8000/api/v1/docs/
+```
+
+After Docker verification, push to GitHub and verify the workflow:
+
+```text
+.github/workflows/ci.yml
+```
+
+The next guide file after Fase 04 is:
+
+```text
+FASE-05-Funzionalita-Business-Reali/21-payment-integration-enterprise.md
+```
+
+Only start Step 21 after Docker and GitHub Actions are verified or explicitly accepted as pending.
+
+---
+
 # Next Logical Evolutions
 
 The next steps after the current baseline are:

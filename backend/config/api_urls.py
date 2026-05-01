@@ -12,36 +12,35 @@ from drf_spectacular.views import (
 )
 from drf_spectacular.utils import extend_schema
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
 )
-
+from apps.accounts.api.authentication import CustomTokenObtainPairView
 
 # -------------------------------------------------------------------
 # API Root
 # -------------------------------------------------------------------
 
+
 @extend_schema(exclude=True)
 @api_view(["GET"])
 def api_root(request):
-    return Response({
-        "name": "PizzaMama Market API",
-        "version": "v1",
-        "status": "active",
-    })
+    return Response(
+        {
+            "name": "PizzaMama Market API",
+            "version": "v1",
+            "status": "active",
+        }
+    )
 
 
 urlpatterns = [
     path("", api_root, name="api-root"),
-
     # Schema & Docs
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path("docs/", SpectacularSwaggerView.as_view(url_name="schema")),
-
     # Authentication (JWT - JSON Web Token)
-    path("auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("auth/login/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-
     # Domain APIs
     path("accounts/", include("apps.accounts.api.urls")),
     path("products/", include("apps.products.api.urls")),

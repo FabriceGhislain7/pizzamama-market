@@ -1,8 +1,11 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import viewsets, permissions
 from apps.products.models import Pizza, Category
 from .serializers import PizzaSerializer, CategorySerializer
 
 
+@method_decorator(cache_page(60 * 5), name="dispatch")
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
@@ -11,6 +14,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
         return Category.objects.filter(is_active=True)
 
 
+@method_decorator(cache_page(60 * 5), name="dispatch")
 class PizzaViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PizzaSerializer
     permission_classes = [permissions.AllowAny]
@@ -20,7 +24,7 @@ class PizzaViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return (
-            Pizza.objects
-            .filter(is_active=True)
+            Pizza.objects.filter(is_active=True)
             .select_related("category")
+            .prefetch_related("ingredients")
         )

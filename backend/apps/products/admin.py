@@ -8,7 +8,6 @@ from .models import (
     PizzaIngredient,
 )
 
-
 admin.site.register(Category)
 admin.site.register(Allergen)
 admin.site.register(Ingredient)

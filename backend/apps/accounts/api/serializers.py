@@ -2,10 +2,10 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from apps.accounts.models import User, Address
 
-
 # -------------------------------------------------------------------
 # User Serializer
 # -------------------------------------------------------------------
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,6 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
 # Address Serializer
 # -------------------------------------------------------------------
 
+
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
@@ -27,6 +28,7 @@ class AddressSerializer(serializers.ModelSerializer):
 # -------------------------------------------------------------------
 # Register Serializer
 # -------------------------------------------------------------------
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

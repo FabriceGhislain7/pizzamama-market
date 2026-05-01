@@ -249,6 +249,22 @@ http://localhost:5173/
 
 ## Architectural Checklist
 
+### Project Evolution
+
+* [x] Phase 01 - Foundations completed (Steps 1-5)
+* [x] Phase 02 - Backend API and domain completed (Steps 6-11)
+* [x] Phase 03 - Authentication, base security and tests completed (Steps 12-15)
+* [x] Phase 04 - Industrialization and deployment implemented through Step 20
+* [ ] External verification pending: Docker Compose and GitHub Actions
+
+Resume context:
+
+* Guide source: `learning-lab/Develop_Documentation/Django/README_STEPS_SENIOR`
+* Read first: `00-ROADMAP-E-ISTRUZIONI/00-readme-roadmap.md`
+* Then: `00-ROADMAP-E-ISTRUZIONI/02-checklist-qualita-documentazione.md`
+* Current backend checkpoint: Steps 1-20 implemented, Docker/GitHub verification pending
+* Next guide step after verification: Step 21, payment integration
+
 ### Foundations
 
 * [x] Modular settings active (base/dev/prod)

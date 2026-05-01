@@ -7,7 +7,8 @@ from pathlib import Path
 from datetime import timedelta
 import dj_database_url
 from dotenv import load_dotenv
-
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # -------------------------------------------------------------------
 # Base Directory
@@ -45,15 +46,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # Third party
+    "axes",
     "rest_framework",
     "django_filters",
     "corsheaders",
     "drf_spectacular",
     "rest_framework_simplejwt.token_blacklist",
-
     # Local apps
+    "apps.core",
     "apps.accounts",
     "apps.products",
     "apps.orders",
@@ -85,6 +86,7 @@ TEMPLATES = [
 # -------------------------------------------------------------------
 
 MIDDLEWARE = [
+    "axes.middleware.AxesMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -127,6 +129,31 @@ DATABASES = {
         conn_max_age=600,
     )
 }
+
+
+# -------------------------------------------------------------------
+# Cache
+# -------------------------------------------------------------------
+
+REDIS_URL = os.environ.get("REDIS_URL")
+
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "pizzamama-local-cache",
+        }
+    }
 
 
 # -------------------------------------------------------------------
@@ -185,12 +212,38 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ],
-    "DEFAULT_PAGINATION_CLASS":
-        "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
-    "DEFAULT_SCHEMA_CLASS":
-        "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "50/hour",
+        "user": "500/hour",
+        "login": "5/minute",
+    },
 }
+
+
+# -------------------------------------------------------------------
+# Authentication Backends
+# -------------------------------------------------------------------
+
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+
+# -------------------------------------------------------------------
+# Login Lockout Protection
+# -------------------------------------------------------------------
+
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 1
+AXES_LOCKOUT_TEMPLATE = None
 
 
 # -------------------------------------------------------------------
@@ -211,14 +264,15 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "standard": {
-            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        "json": {
+            "()": "pythonjsonlogger.json.JsonFormatter",
+            "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
         },
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "formatter": "standard",
+            "formatter": "json",
         },
     },
     "root": {
@@ -233,3 +287,18 @@ LOGGING = {
         },
     },
 }
+
+
+# -------------------------------------------------------------------
+# Error Monitoring
+# -------------------------------------------------------------------
+
+SENTRY_DSN = os.environ.get("SENTRY_DSN")
+
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=0.2,
+        send_default_pii=False,
+    )
