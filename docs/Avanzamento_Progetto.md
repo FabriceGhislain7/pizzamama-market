@@ -235,8 +235,8 @@ PostgreSQL su Render, HTTPS attivo, DEBUG=False, JWT attivo.
 # II. FRONTEND (React)
 
 **Cartella:** `frontend/`  
-**Step completati:** FASE-01 (step 1-5) + FASE-02 (step 6-8)  
-**Prossimo step:** FASE-03 — Routing, Layout e Design System
+**Step completati:** FASE-01 (1-5) + FASE-02 (6-8) + FASE-03 (9-12) + FASE-04 parziale (13-14, 16-17)  
+**Prossimo step:** Step 15 — Catalogo prodotti da API + Step 18 — Login/Auth (richiedono backend con CORS)
 
 ## Stack attivo
 
@@ -245,6 +245,7 @@ PostgreSQL su Render, HTTPS attivo, DEBUG=False, JWT attivo.
 | Node.js | 22.20.0 | ✔ |
 | npm | 11.6.1 | ✔ |
 | React | 19.2.x | ✔ |
+| react-router-dom | 7.16.x | ✔ |
 | TypeScript | 6.0.x | ✔ |
 | Vite | 8.0.x | ✔ |
 | ESLint | 10.3.x | ✔ |
@@ -253,76 +254,99 @@ PostgreSQL su Render, HTTPS attivo, DEBUG=False, JWT attivo.
 ## Struttura cartelle frontend
 
 ```
-frontend/
-├── src/
-│   ├── app/
-│   │   └── settings.ts     (apiBaseUrl centralizzato, fail-fast se mancante)
-│   ├── pages/              (pagine dell'app)
-│   ├── components/         (componenti riutilizzabili)
-│   ├── features/           (logica per dominio: auth, orders, products)
-│   ├── services/           (chiamate API al backend)
-│   ├── types/              (TypeScript types/interfaces)
-│   ├── hooks/              (custom React hooks)
-│   ├── utils/              (funzioni di utilità)
-│   ├── styles/             (CSS globali e variabili)
-│   ├── App.tsx             (componente root)
-│   ├── main.tsx            (entry point React 19 + StrictMode)
-│   └── index.css           (CSS reset minimale)
-├── public/
-├── .env.example            (VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1)
-├── .env.local              (non committato)
-├── .gitignore
-├── .prettierrc             (semi, singleQuote:false, trailingComma:all, printWidth:100)
-├── vite.config.ts          (alias @/ → src/)
-├── tsconfig.app.json       (paths @/* → src/*, ignoreDeprecations:6.0)
-└── package.json
+frontend/src/
+├── app/
+│   ├── router.tsx       (createBrowserRouter, routes con AppLayout)
+│   └── settings.ts      (apiBaseUrl centralizzato, fail-fast)
+├── pages/
+│   ├── HomePage.tsx
+│   ├── MenuPage.tsx     (placeholder — attende API prodotti)
+│   ├── CartPage.tsx
+│   └── NotFoundPage.tsx
+├── components/
+│   ├── layout/
+│   │   ├── AppLayout.tsx        (shell: header + outlet + footer)
+│   │   ├── Header.tsx           (NavLink attivi)
+│   │   └── Footer.tsx
+│   ├── ui/
+│   │   └── Button.tsx           (varianti: primary/secondary/danger/ghost, size, loading)
+│   └── state/
+│       ├── LoadingState.tsx
+│       ├── ErrorState.tsx       (con pulsante retry)
+│       └── EmptyState.tsx
+├── features/
+│   └── cart/
+│       ├── cartContext.ts       (CartContext + CartContextValue interface)
+│       ├── CartProvider.tsx     (useReducer, persistenza automatica)
+│       ├── useCart.ts           (hook)
+│       ├── cartStorage.ts       (localStorage: load/save/clear)
+│       └── index.ts
+├── services/
+│   └── api/
+│       ├── httpClient.ts        (get/post/patch/delete, Bearer token automatico)
+│       └── apiErrors.ts        (ApiError class, toUserMessage(), messaggi IT)
+├── types/
+│   ├── product.ts               (Pizza, Category, Ingredient, PizzaSize)
+│   ├── order.ts                 (Order, OrderItem, CartItem, OrderStatus)
+│   ├── user.ts                  (User, Address, AuthTokens)
+│   └── index.ts                 (re-export + PaginatedResponse<T>)
+└── styles/
+    ├── tokens.css               (CSS custom properties: colori, spacing, tipografia, radius)
+    └── global.css               (reset + stili base importa tokens.css)
 ```
 
-## Alias @/ configurato
+## Routing
 
-```ts
-// vite.config.ts
-resolve: { alias: { "@": path.resolve(__dirname, "./src") } }
-
-// tsconfig.app.json
-"paths": { "@/*": ["src/*"] }
+```
+/          → HomePage
+/menu      → MenuPage (placeholder API)
+/cart      → CartPage
+*          → NotFoundPage
 ```
 
-Import esempio: `import { settings } from "@/app/settings"`
+Tutte le route dentro `AppLayout` (header + footer). NotFound fuori dal layout.
 
-## settings.ts — configurazione centralizzata
+## Design tokens (tokens.css)
 
-```ts
-export const settings = {
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL,  // fail-fast se mancante
-} as const;
-```
+Variabili CSS per: `--color-primary` (#e63946), `--color-text`, `--color-border`,  
+`--space-1..8`, `--font-size-sm..3xl`, `--radius-sm/md/lg`, `--shadow-sm/md`.
 
-Mai usare `import.meta.env.VITE_*` direttamente nei componenti — sempre passare per `settings`.
+## httpClient — regole
 
-## Script disponibili
+- Mai chiamare `fetch` direttamente nei componenti — sempre `httpClient.get/post/...`
+- Token JWT letto da `localStorage.access_token` e iniettato automaticamente
+- Risposta 204 → ritorna `undefined`
+- Errore HTTP → lancia `ApiError(status, message, detail)`
+- `toUserMessage(error)` converte errori tecnici in messaggi italiani per l'utente
 
-```bash
-npm run dev          # dev server su http://localhost:5173
-npm run build        # build production (tsc + vite build)
-npm run lint         # ESLint
-npm run format       # Prettier write
-npm run format:check # Prettier check
-```
+## Carrello (CartProvider)
 
-## Connessione al backend
+- Stato gestito con `useReducer` (ADD/REMOVE/UPDATE_QTY/CLEAR)
+- Persistenza automatica su `localStorage` (chiave: `pizzamama_cart`)
+- Calcolo `totalItems` e `totalPrice` derivati dallo stato
+- Inizializzato da `loadCart()` al primo render
+- Accesso via `useCart()` hook — lancia errore se usato fuori da `CartProvider`
 
-`VITE_API_BASE_URL` in `.env.local` → `http://127.0.0.1:8000/api/v1`  
-In produzione: URL Render del backend.
+## Decisioni architetturali frontend
 
-## Cosa manca ancora (FASE-03+)
+1. CSS Modules per stili componente — nessun framework CSS esterno
+2. Design tokens in `tokens.css` — nessun valore hardcoded nei componenti
+3. `httpClient` unico punto di accesso alle API — mai `fetch` diretto
+4. `settings.ts` unico punto per variabili ambiente — mai `import.meta.env.*` nei componenti
+5. `declare` per class fields TypeScript 6 (`erasableSyntaxOnly`)
+6. Contesti separati in file `.ts` puri — Provider in `.tsx` separato (react-refresh)
 
-- Routing (React Router)
-- Layout shell (header, footer, sidebar)
-- Design system / CSS framework
-- Gestione stato (Zustand o React Query)
-- Autenticazione JWT lato frontend
-- Pagine: login, menu, carrello, ordini
+## Cosa manca (richiede backend con CORS configurato)
+
+- Step 15: catalogo prodotti da API Django (`/api/v1/products/`)
+- Step 18: login/register con JWT
+- Step 19: AuthContext e gestione token
+- Step 20: protected routes, logout, sessione scaduta
+- Step 21: CORS/CSRF configurazione backend
+- Step 22-26: checkout, ordini, profilo, staff, dashboard
+
+**Blocco attuale:** il backend non ha CORS configurato per il frontend locale.  
+**Prossimo step backend necessario:** configurare `django-cors-headers` per `http://localhost:5173`.
 
 ---
 
@@ -331,7 +355,7 @@ In produzione: URL Render del backend.
 | Area | Ultimo step | Prossimo |
 |---|---|---|
 | Backend Django | Step 17 — RBAC | Step 18 — Audit Logging |
-| Frontend React | FASE-02 — Architettura | FASE-03 — Routing e Layout |
+| Frontend React | Step 17 — Cart + API client | Step 15/18 — richiede CORS backend |
 
 **Per continuare il backend:** leggere  
 `dev-workflow\...\Backend-Django\FASE-04-Funzionalita-Business-Reali\18-audit-logging-enterprise.md`
