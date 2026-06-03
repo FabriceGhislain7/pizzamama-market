@@ -1,8 +1,11 @@
+import { CartProvider } from "@/features/cart";
+import { AppRouter } from "@/app/router";
+
 export function App() {
   return (
-    <main>
-      <h1>PizzaMama Market</h1>
-    </main>
+    <CartProvider>
+      <AppRouter />
+    </CartProvider>
   );
 }
 
