@@ -235,8 +235,8 @@ PostgreSQL su Render, HTTPS attivo, DEBUG=False, JWT attivo.
 # II. FRONTEND (React)
 
 **Cartella:** `frontend/`  
-**Step completati:** FASE-01 (step 1-5)  
-**Prossimo step:** FASE-02 — Architettura Frontend (routing, layout, alias @/)
+**Step completati:** FASE-01 (step 1-5) + FASE-02 (step 6-8)  
+**Prossimo step:** FASE-03 — Routing, Layout e Design System
 
 ## Stack attivo
 
@@ -255,23 +255,50 @@ PostgreSQL su Render, HTTPS attivo, DEBUG=False, JWT attivo.
 ```
 frontend/
 ├── src/
-│   ├── App.tsx        (componente root pulito)
-│   ├── main.tsx       (entry point React 19 + StrictMode)
-│   └── index.css      (CSS reset minimale)
+│   ├── app/
+│   │   └── settings.ts     (apiBaseUrl centralizzato, fail-fast se mancante)
+│   ├── pages/              (pagine dell'app)
+│   ├── components/         (componenti riutilizzabili)
+│   ├── features/           (logica per dominio: auth, orders, products)
+│   ├── services/           (chiamate API al backend)
+│   ├── types/              (TypeScript types/interfaces)
+│   ├── hooks/              (custom React hooks)
+│   ├── utils/              (funzioni di utilità)
+│   ├── styles/             (CSS globali e variabili)
+│   ├── App.tsx             (componente root)
+│   ├── main.tsx            (entry point React 19 + StrictMode)
+│   └── index.css           (CSS reset minimale)
 ├── public/
-│   ├── favicon.svg
-│   └── icons.svg
-├── .env.example       (VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1)
-├── .env.local         (non committato)
-├── .gitignore         (node_modules, dist, .env.*)
-├── .prettierrc        (semi, singleQuote:false, trailingComma:all, printWidth:100)
-├── eslint.config.js
-├── package.json
-├── tsconfig.json
-├── tsconfig.app.json
-├── tsconfig.node.json
-└── vite.config.ts
+├── .env.example            (VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1)
+├── .env.local              (non committato)
+├── .gitignore
+├── .prettierrc             (semi, singleQuote:false, trailingComma:all, printWidth:100)
+├── vite.config.ts          (alias @/ → src/)
+├── tsconfig.app.json       (paths @/* → src/*, ignoreDeprecations:6.0)
+└── package.json
 ```
+
+## Alias @/ configurato
+
+```ts
+// vite.config.ts
+resolve: { alias: { "@": path.resolve(__dirname, "./src") } }
+
+// tsconfig.app.json
+"paths": { "@/*": ["src/*"] }
+```
+
+Import esempio: `import { settings } from "@/app/settings"`
+
+## settings.ts — configurazione centralizzata
+
+```ts
+export const settings = {
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL,  // fail-fast se mancante
+} as const;
+```
+
+Mai usare `import.meta.env.VITE_*` direttamente nei componenti — sempre passare per `settings`.
 
 ## Script disponibili
 
@@ -283,22 +310,15 @@ npm run format       # Prettier write
 npm run format:check # Prettier check
 ```
 
-## Configurazione Prettier
-
-```json
-{ "semi": true, "singleQuote": false, "trailingComma": "all", "printWidth": 100 }
-```
-
 ## Connessione al backend
 
-La variabile `VITE_API_BASE_URL` in `.env.local` punta al backend Django locale.  
-In produzione andrà aggiornata con l'URL Render.
+`VITE_API_BASE_URL` in `.env.local` → `http://127.0.0.1:8000/api/v1`  
+In produzione: URL Render del backend.
 
-## Cosa manca ancora (FASE-02+)
+## Cosa manca ancora (FASE-03+)
 
 - Routing (React Router)
 - Layout shell (header, footer, sidebar)
-- Alias `@/` per imports assoluti
 - Design system / CSS framework
 - Gestione stato (Zustand o React Query)
 - Autenticazione JWT lato frontend
@@ -311,7 +331,7 @@ In produzione andrà aggiornata con l'URL Render.
 | Area | Ultimo step | Prossimo |
 |---|---|---|
 | Backend Django | Step 17 — RBAC | Step 18 — Audit Logging |
-| Frontend React | FASE-01 — Setup | FASE-02 — Architettura |
+| Frontend React | FASE-02 — Architettura | FASE-03 — Routing e Layout |
 
 **Per continuare il backend:** leggere  
 `dev-workflow\...\Backend-Django\FASE-04-Funzionalita-Business-Reali\18-audit-logging-enterprise.md`
