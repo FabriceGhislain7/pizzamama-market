@@ -1,12 +1,16 @@
 import pytest
+from django.contrib.auth.models import Group
 from rest_framework.test import APIClient
 from apps.orders.models import Order
 from apps.accounts.tests.factories import UserFactory
+from apps.accounts.services.role_service import RoleService
 
 
 @pytest.mark.django_db
 def test_change_status_endpoint():
+    RoleService.setup_roles()
     user = UserFactory()
+    user.groups.add(Group.objects.get(name="Manager"))
     client = APIClient()
     client.force_authenticate(user=user)
 

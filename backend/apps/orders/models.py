@@ -144,6 +144,14 @@ class Order(TimeStampedModel):
     discount_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
 
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="assigned_orders",
+    )
+
     confirmed_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
 

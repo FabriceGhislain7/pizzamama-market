@@ -2,6 +2,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from apps.orders.models import Order
+from apps.core.permissions import IsManager, IsKitchen, IsDelivery, IsManagerOrITAdmin
 from .serializers import OrderSerializer, OrderStatusSerializer
 
 
@@ -14,11 +15,30 @@ class OrderViewSet(viewsets.ModelViewSet):
     lookup_field = "id"
     lookup_value_regex = "[0-9a-f-]{36}"
 
+    def get_permissions(self):
+        if self.action == "change_status":
+            return [permissions.IsAuthenticated(), IsManagerOrITAdmin()]
+        return [permissions.IsAuthenticated()]
+
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return self.queryset.none()
 
-        return self.queryset.filter(user=self.request.user)
+        user = self.request.user
+
+        if user.groups.filter(name__in=["Manager", "IT_Admin"]).exists():
+            return self.queryset.all()
+
+        if user.groups.filter(name="Kitchen").exists():
+            return self.queryset.filter(status="preparing")
+
+        if user.groups.filter(name="Delivery").exists():
+            return self.queryset.filter(
+                status="out_for_delivery",
+                assigned_to=user,
+            )
+
+        return self.queryset.filter(user=user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
