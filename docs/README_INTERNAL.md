@@ -465,6 +465,15 @@ docker compose build
 docker compose up
 ```
 
+The local Docker Compose service disables HTTPS redirects through:
+
+```env
+DJANGO_SECURE_SSL_REDIRECT=False
+```
+
+Production settings still keep HTTPS redirect enabled by default when the
+variable is not explicitly set.
+
 Expected Docker endpoints:
 
 ```text

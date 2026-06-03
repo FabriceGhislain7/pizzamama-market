@@ -1,6 +1,16 @@
 from .base import *
 import os
 
+
+def env_bool(name, default=False):
+    return os.environ.get(name, str(default)).lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
 DEBUG = False
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
@@ -31,7 +41,7 @@ SECURE_HSTS_PRELOAD = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = env_bool("DJANGO_SECURE_SSL_REDIRECT", True)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 SECURE_REFERRER_POLICY = "strict-origin"
