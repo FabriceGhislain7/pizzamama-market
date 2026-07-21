@@ -4,7 +4,7 @@ from apps.orders.models import Order
 from apps.products.models import Pizza
 
 
-ROLES = ["Manager", "Kitchen", "Delivery", "Staff", "IT_Admin"]
+ROLES = ["Manager", "Kitchen", "Delivery", "Staff", "IT_Admin", "Finance"]
 
 
 class RoleService:
@@ -16,6 +16,7 @@ class RoleService:
         delivery_group, _ = Group.objects.get_or_create(name="Delivery")
         staff_group, _ = Group.objects.get_or_create(name="Staff")
         it_group, _ = Group.objects.get_or_create(name="IT_Admin")
+        Group.objects.get_or_create(name="Finance")
 
         order_ct = ContentType.objects.get_for_model(Order)
         order_permissions = Permission.objects.filter(content_type=order_ct)

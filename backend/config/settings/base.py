@@ -58,6 +58,9 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.products",
     "apps.orders",
+    "apps.audit",
+    "apps.analytics",
+    "django_celery_beat",
 ]
 
 
@@ -95,6 +98,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.audit.middleware.AuditMiddleware",
+    "apps.core.middleware.request_id.RequestIDMiddleware",
 ]
 
 
@@ -288,6 +293,26 @@ LOGGING = {
     },
 }
 
+
+# -------------------------------------------------------------------
+# Upload & Request Size Limits
+# -------------------------------------------------------------------
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024  # 2 MB
+
+# -------------------------------------------------------------------
+# Celery Configuration
+# -------------------------------------------------------------------
+
+CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "Europe/Rome"
+
+# Email defaults (override in prod with real SMTP)
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@pizzamama.it")
 
 # -------------------------------------------------------------------
 # Error Monitoring

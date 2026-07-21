@@ -8,6 +8,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://localhost:5173",
 ]
 
 # In development allow session authentication (useful for browsable API)

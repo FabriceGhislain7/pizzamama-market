@@ -1,11 +1,14 @@
 import { CartProvider } from "@/features/cart";
+import { AuthProvider } from "@/features/auth";
 import { AppRouter } from "@/app/router";
 
 export function App() {
   return (
-    <CartProvider>
-      <AppRouter />
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <AppRouter />
+      </CartProvider>
+    </AuthProvider>
   );
 }
 

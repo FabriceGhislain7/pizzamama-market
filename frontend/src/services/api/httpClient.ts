@@ -1,27 +1,51 @@
 import { settings } from "@/app/settings";
 import { ApiError } from "./apiErrors";
 
-type RequestOptions = RequestInit & { skipAuth?: boolean };
+type RequestOptions = RequestInit & { skipAuth?: boolean; _retry?: boolean };
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { skipAuth = false, ...fetchOptions } = options;
+  const { skipAuth = false, _retry = false, ...fetchOptions } = options;
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...fetchOptions.headers,
+    ...(fetchOptions.headers as Record<string, string>),
   };
 
   if (!skipAuth) {
     const token = localStorage.getItem("access_token");
-    if (token) {
-      (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
-    }
+    if (token) headers["Authorization"] = `Bearer ${token}`;
   }
 
   const response = await fetch(`${settings.apiBaseUrl}${path}`, {
     ...fetchOptions,
     headers,
   });
+
+  // Token scaduto: proviamo un refresh una sola volta
+  if (response.status === 401 && !skipAuth && !_retry) {
+    const refreshToken = localStorage.getItem("refresh_token");
+    if (refreshToken) {
+      try {
+        const refreshRes = await fetch(`${settings.apiBaseUrl}/auth/refresh/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh: refreshToken }),
+        });
+        if (refreshRes.ok) {
+          const data = await refreshRes.json() as { access: string };
+          localStorage.setItem("access_token", data.access);
+          return request<T>(path, { ...options, _retry: true });
+        }
+      } catch {
+        // refresh fallito
+      }
+    }
+    // refresh impossibile → pulizia e redirect login
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    window.location.href = "/login";
+    return undefined as T;
+  }
 
   if (!response.ok) {
     let detail: unknown;

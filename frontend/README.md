@@ -1,73 +1,86 @@
-# React + TypeScript + Vite
+# PizzaMama Market — Frontend React
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend React per l'e-commerce pizzeria PizzaMama Market.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19 + TypeScript 6
+- Vite 8
+- React Router 7
+- CSS Modules + Design Tokens
+- Vitest + React Testing Library
 
-## React Compiler
+## Installazione locale
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```powershell
+cd frontend
+npm install
+copy .env.example .env.local
+# Editare .env.local: VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+App disponibile su: `http://localhost:5173/`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Comandi disponibili
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Comando | Descrizione |
+|---|---|
+| `npm run dev` | Avvia server di sviluppo |
+| `npm run build` | Build production in `dist/` |
+| `npm run preview` | Anteprima della build production |
+| `npm run lint` | Controllo ESLint |
+| `npm run format` | Formattazione Prettier |
+| `npm run format:check` | Verifica formattazione |
+| `npm run test:run` | Esegue i test una volta |
+| `npm run test` | Test in watch mode |
+| `npm run check` | Quality gate completo (format + lint + test + build) |
+
+## Quality gate — prima di ogni merge
+
+```powershell
+npm run check
 ```
+
+Deve essere verde su tutti i punti.
+
+## Struttura cartelle
+
+```
+src/
+├── app/           # Router, ProtectedRoute, StaffRoute, settings
+├── components/    # UI riutilizzabili (Button, states, layout)
+├── features/      # Logica per dominio (auth, cart, products, orders...)
+├── hooks/         # Hook condivisi (useAsync)
+├── pages/         # Pagine entry-point
+├── services/api/  # httpClient + ApiError
+├── styles/        # tokens.css + global.css
+├── test/          # Setup Vitest
+└── types/         # TypeScript interfaces
+```
+
+## Route disponibili
+
+| Route | Accesso | Descrizione |
+|---|---|---|
+| `/` | Pubblico | Home |
+| `/menu` | Pubblico | Catalogo pizze da API |
+| `/login` | Pubblico | Login JWT |
+| `/register` | Pubblico | Registrazione |
+| `/cart` | Autenticato | Carrello |
+| `/checkout` | Autenticato | Checkout → crea ordine |
+| `/orders` | Autenticato | Storico ordini |
+| `/profile` | Autenticato | Profilo + indirizzi |
+| `/staff` | Autenticato | Gestione ordini staff |
+| `/dashboard` | Autenticato | Dashboard KPI manager |
+
+## Deploy su Render (Static Site)
+
+1. Build command: `npm install && npm run build`
+2. Publish directory: `dist`
+3. Env var: `VITE_API_BASE_URL=https://pizzamama-market-backend.onrender.com/api/v1`
+
+## Deploy su Netlify / Vercel
+
+Stessa configurazione — build command `npm run build`, publish `dist`.
+Aggiungere redirect per SPA: `/* → /index.html 200`.

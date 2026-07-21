@@ -16,7 +16,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         try:
-            return super().validate(attrs)
+            data = super().validate(attrs)
         except AuthenticationFailed as exc:
             request = self.context.get("request")
             client_ip = request.META.get("REMOTE_ADDR") if request else None
@@ -25,6 +25,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 extra={"client_ip": client_ip},
             )
             raise AuthenticationFailed("Invalid credentials") from exc
+
+        # Audit successful login (imported here to avoid circular import)
+        from apps.audit.services.audit_service import AuditService
+        AuditService.log(
+            user=self.user,
+            action_type="login",
+            instance=self.user,
+        )
+        return data
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):

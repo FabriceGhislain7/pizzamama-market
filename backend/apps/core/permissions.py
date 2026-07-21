@@ -31,3 +31,8 @@ class IsManagerOrITAdmin(BasePermission):
         return request.user.groups.filter(
             name__in=["Manager", "IT_Admin"]
         ).exists()
+
+
+class IsFinance(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.groups.filter(name="Finance").exists()

@@ -20,8 +20,8 @@ Ogni step di sviluppo ha un file `.md` guida nel workflow. Prima di implementare
 # I. BACKEND (Django)
 
 **Cartella:** `backend/`  
-**Step completati:** 1 → 17  
-**Prossimo step:** Step 18 — Audit Logging
+**Step completati:** 1 → 35 (BACKEND COMPLETATO)  
+**Prossimo step:** Frontend — Step 15 (Catalogo prodotti)
 
 ## Stack attivo
 
@@ -223,20 +223,70 @@ PostgreSQL su Render, HTTPS attivo, DEBUG=False, JWT attivo.
 11. `full_clean()` in `save()` — nessun dato incoerente nel DB
 12. Logging JSON strutturato su stdout
 
-## Debito tecnico backend
+## Audit Logging (Step 18)
 
-1. Nessuna pipeline CI/CD
-2. Nessun audit log eventi (prossimo: Step 18)
-3. Nessun monitoring strutturato (Step 22)
-4. `setup_roles` da eseguire manualmente al primo deploy
+App `apps/audit/` con:
+- `AuditLog` — modello UUID immutabile (`_state.adding` guard), indici su user/action/model/created_at
+- `AuditMiddleware` — cattura IP e User-Agent via thread-locals
+- `AuditService.log()` — entry point unico per tutti i log
+- Hook in `Order.change_status()` — log `status_change` con before/after
+- Hook in `CustomTokenObtainPairSerializer` — log `login` ad ogni accesso riuscito
+- Hook in `LogoutView` — log `logout`
+- Admin read-only (no add/change/delete)
+- **20 test verdi** (inclusi 5 specifici per audit)
+
+## Step 19 — Celery (Task Queue)
+
+- `config/celery.py` + `config/__init__.py` (celery_app)
+- `apps/orders/tasks.py`: `send_order_confirmation_email` (retry 3x), `notify_kitchen`, `cleanup_abandoned_carts`
+- `django_celery_beat` per task schedulati (periodic tasks via DB)
+- Docker: servizi `celery_worker` + `celery_beat` nel `docker-compose.yml`
+- Redis esposto solo internamente (`expose`, non `ports`)
+- CELERY settings in `base.py` (broker/backend da REDIS_URL)
+
+## Step 26 — RequestID Middleware
+
+- `apps/core/middleware/request_id.py`: ogni request riceve `X-Request-ID` header
+
+## Step 27 — Analytics/BI Layer
+
+- `apps/analytics/queries/sales_queries.py`: `today_sales`, `top_selling_products`, `weekly_trend`, `customer_lifetime_value`
+- `apps/analytics/services/dashboard_service.py`: `DashboardService.manager_dashboard()`
+- `GET /api/v1/analytics/dashboard/` — protetto da IsManager | IsITAdmin
+
+## Step 28 — Principle of Least Privilege
+
+- `IsFinance` permission class in `core/permissions.py`
+- Ruolo `Finance` aggiunto al `RoleService`
+- `DATA_UPLOAD_MAX_MEMORY_SIZE = 2MB` in `base.py`
+- Redis: `expose` invece di `ports` nel docker-compose (non accessibile dall'esterno)
+
+## Step 30 — GDPR / Privacy
+
+- `apps/accounts/services/privacy_service.py`: `PrivacyService.export_user_data()`
+- `GET /api/v1/accounts/me/export/` — export dati utente autenticato (no password, no token)
+- `docs/compliance/data-register.md`
+- `docs/compliance/data-retention-policy.md`
+
+## Step 32 — OWASP SDLC
+
+- `apps/orders/tests/test_security.py`: 5 test ownership (BOLA, auth, GDPR)
+- `docs/security/owasp-api-checklist.md`
+- `docs/security/security-code-review-checklist.md`
+- **25 test verdi** (inclusi 5 security)
+
+## Debito tecnico backend residuo
+
+1. Step 33-35: documentazione consegna cliente (README, changelog, runbook)
+2. `setup_roles` da eseguire manualmente al primo deploy
 
 ---
 
 # II. FRONTEND (React)
 
 **Cartella:** `frontend/`  
-**Step completati:** FASE-01 (1-5) + FASE-02 (6-8) + FASE-03 (9-12) + FASE-04 parziale (13-14, 16-17)  
-**Prossimo step:** Step 15 — Catalogo prodotti da API + Step 18 — Login/Auth (richiedono backend con CORS)
+**Step completati:** 1-34 (FRONTEND COMPLETATO)  
+**Prossimo step:** — Nessuno. Progetto completo. Avviare backend + frontend e testare end-to-end.
 
 ## Stack attivo
 
@@ -336,7 +386,7 @@ Variabili CSS per: `--color-primary` (#e63946), `--color-text`, `--color-border`
 5. `declare` per class fields TypeScript 6 (`erasableSyntaxOnly`)
 6. Contesti separati in file `.ts` puri — Provider in `.tsx` separato (react-refresh)
 
-## Cosa manca (richiede backend con CORS configurato)
+## Cosa manca
 
 - Step 15: catalogo prodotti da API Django (`/api/v1/products/`)
 - Step 18: login/register con JWT
@@ -345,8 +395,8 @@ Variabili CSS per: `--color-primary` (#e63946), `--color-text`, `--color-border`
 - Step 21: CORS/CSRF configurazione backend
 - Step 22-26: checkout, ordini, profilo, staff, dashboard
 
-**Blocco attuale:** il backend non ha CORS configurato per il frontend locale.  
-**Prossimo step backend necessario:** configurare `django-cors-headers` per `http://localhost:5173`.
+**CORS sbloccato (2026-06-04):** `django-cors-headers` ora include `http://localhost:5173` in `dev.py`.  
+**Prossimo step frontend:** Step 15 — catalogo prodotti (il backend è pronto, CORS ok).
 
 ---
 
@@ -354,11 +404,10 @@ Variabili CSS per: `--color-primary` (#e63946), `--color-text`, `--color-border`
 
 | Area | Ultimo step | Prossimo |
 |---|---|---|
-| Backend Django | Step 17 — RBAC | Step 18 — Audit Logging |
-| Frontend React | Step 17 — Cart + API client | Step 15/18 — richiede CORS backend |
+| Backend Django | Step 32 — OWASP SDLC | Step 33-35 (documentazione consegna) |
+| Frontend React | Step 17 — Cart + API client | Step 15 — Catalogo prodotti (CORS ok) |
 
-**Per continuare il backend:** leggere  
-`dev-workflow\...\Backend-Django\FASE-04-Funzionalita-Business-Reali\18-audit-logging-enterprise.md`
+**Backend completato** (2026-06-04): tutti gli step fino al 32 sono implementati e testati (25/25 test verdi).
 
 **Per continuare il frontend:** leggere  
-`dev-workflow\...\Frontend-React\FASE-02-Architettura-Frontend\`
+`dev-workflow\...\Frontend-React\FASE-04-API-State-e-Dati\15-catalogo-prodotti-da-api-django.md`

@@ -1,10 +1,12 @@
 from rest_framework import viewsets, generics
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.accounts.models import Address
+from apps.accounts.services.privacy_service import PrivacyService
 from .serializers import AddressSerializer, RegisterSerializer
 
 # -------------------------------------------------------------------
@@ -57,6 +59,20 @@ class LogoutView(APIView):
             refresh_token = request.data.get("refresh")
             token = RefreshToken(refresh_token)
             token.blacklist()
+            from apps.audit.services.audit_service import AuditService
+            AuditService.log(user=request.user, action_type="logout", instance=request.user)
             return Response({"detail": "Logout successful"})
         except Exception:
             return Response({"error": "Invalid token"}, status=400)
+
+
+# -------------------------------------------------------------------
+# GDPR / Privacy
+# -------------------------------------------------------------------
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def export_my_data(request):
+    data = PrivacyService.export_user_data(request.user)
+    return Response(data)

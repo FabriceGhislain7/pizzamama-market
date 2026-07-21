@@ -1,36 +1,144 @@
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+  height: 68px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-6);
-  height: 60px;
-  background: var(--color-primary);
-  color: #fff;
+  gap: var(--space-4);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .brand a {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   text-decoration: none;
+}
+
+.logo {
+  font-size: 1.6rem;
+}
+
+.brandName {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.02em;
+}
+
+.brandSub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: -2px;
 }
 
 .nav {
   display: flex;
-  gap: var(--space-4);
+  align-items: center;
+  gap: var(--space-1);
 }
 
-.nav a {
-  color: rgba(255, 255, 255, 0.85);
-  text-decoration: none;
+.navLink {
+  color: var(--color-text);
   font-weight: 500;
-  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-sm);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
 }
 
-.nav a:hover,
-.nav a.active {
+.navLink:hover {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.navLink.active {
+  color: var(--color-primary);
+  background: var(--color-surface);
+}
+
+.cartBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-weight: 500;
+  font-size: var(--font-size-sm);
+  transition: background 0.15s;
+  text-decoration: none;
+}
+
+.cartBtn:hover {
+  background: var(--color-surface);
+  text-decoration: none;
+}
+
+.cartBadge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: var(--color-primary);
   color: #fff;
-  background: rgba(255, 255, 255, 0.15);
+  font-size: 10px;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background: var(--color-border);
+  margin: 0 var(--space-1);
+}
+
+.logoutBtn {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.logoutBtn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.userChip {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  padding: var(--space-1) var(--space-3);
 }

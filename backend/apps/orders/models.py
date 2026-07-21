@@ -9,6 +9,17 @@ from apps.core.models import TimeStampedModel
 import uuid
 
 
+def _audit_status_change(order, old_status, new_status):
+    # Imported here to avoid circular import at module load time
+    from apps.audit.services.audit_service import AuditService
+    AuditService.log(
+        user=order.user,
+        action_type="status_change",
+        instance=order,
+        changes={"old_status": old_status, "new_status": new_status},
+    )
+
+
 # CART
 class Cart(TimeStampedModel):
     user = models.ForeignKey(
@@ -180,6 +191,7 @@ class Order(TimeStampedModel):
                 f"Invalid status transition from {self.status} to {new_status}"
             )
 
+        old_status = self.status
         self.status = new_status
 
         if new_status == "confirmed":
@@ -189,6 +201,7 @@ class Order(TimeStampedModel):
             self.delivered_at = timezone.now()
 
         self.save()
+        _audit_status_change(self, old_status, new_status)
 
     def save(self, *args, **kwargs):
         if not self.order_number:

@@ -7,10 +7,12 @@ export interface User {
 }
 
 export interface Address {
-  id: number;
-  street: string;
+  id: string;
+  label: string;
+  street_address: string;
   city: string;
-  zip_code: string;
+  postal_code: string;
+  province: string;
   country: string;
   is_default: boolean;
 }

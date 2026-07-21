@@ -17,8 +17,8 @@ services:
     image: redis:7
     container_name: pizzamama_redis
     restart: always
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -41,6 +41,38 @@ services:
       DJANGO_SECURE_SSL_REDIRECT: "False"
       DATABASE_URL: postgres://pizzamama:pizzamama@db:5432/pizzamama
       REDIS_URL: redis://redis:6379/1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_worker:
+    build: .
+    container_name: pizzamama_celery
+    command: celery -A config worker --loglevel=info
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      DATABASE_URL: postgres://pizzamama:pizzamama@db:5432/pizzamama
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_beat:
+    build: .
+    container_name: pizzamama_celery_beat
+    command: celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      DATABASE_URL: postgres://pizzamama:pizzamama@db:5432/pizzamama
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       db:
         condition: service_healthy
