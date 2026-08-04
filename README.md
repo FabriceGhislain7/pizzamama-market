@@ -8,7 +8,7 @@
 
 ### Production API Documentation
 
-[https://pizzamama-market-backend.onrender.com/api/v1/docs/](https://pizzamama-market-backend.onrender.com/api/v1/docs/)
+[https://pizzamama-market-049s.onrender.com/api/v1/docs/](https://pizzamama-market-049s.onrender.com/api/v1/docs/)
 
 The interactive Swagger interface allows full exploration of all endpoints, authentication via JWT, and complete schema inspection.
 
